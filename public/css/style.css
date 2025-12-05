@@ -1,0 +1,22 @@
+/* Ana Uygulama Stilleri */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #c9d1d9; /* Açık gri metin */
+}
+.sidebar a:hover {
+    background-color: #21262d !important;
+}
+.card {
+    background-color: #161b22 !important; 
+    border: 1px solid #30363d !important; /* Hafif bir kenarlık */
+    transition: all 0.3s ease;
+}
+.card:hover {
+    box-shadow: 0 0 20px rgba(78, 93, 200, 0.2); /* Neon parlama efekti */
+}
+.text-info {
+    color: #00bcd4 !important; /* Canlı vurgu rengi */
+}
+.list-group-item {
+    background-color: transparent !important;
+}
