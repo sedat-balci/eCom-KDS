@@ -1,0 +1,9 @@
+# Node.js Bağımlılıkları (Otomatik indirilmesi gereken büyük klasör)
+/node_modules/
+
+# Veritabanı ve Konfigürasyon Dosyaları (HASSAS BİLGİLER)
+config/db.js
+
+# Çalışma ve Geçici Dosyalar
+.DS_Store
+*.log
