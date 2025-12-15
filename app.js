@@ -1,7 +1,8 @@
-const express = require('express'); // Hata veren kısım burasıydı!
+const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const db = require('./config/db'); // Veritabanı bağlantısını çağır
+const db = require('./config/db'); // db.js'i tutuyoruz
+const mainRoutes = require('./routes/mainRoutes'); // YENİ: Rota dosyasını çağırıyoruz
 
 const app = express();
 const PORT = 3000;
@@ -17,39 +18,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-// --- ANA ROTASYON (GET İSTEĞİ - VERİ ÇEKME) ---
-app.get('/', (req, res) => {
-    // Tüm personel verilerini çekiyoruz (Sorun 1: İşgücü Planlama için temel)
-    const sql = `SELECT 
-                    id, 
-                    ad_soyad, 
-                    rol, 
-                    saatlik_ucret 
-                 FROM personel`;
-
-    db.query(sql, (err, personel_results) => {
-        if (err) {
-            console.error('Veri çekme hatası:', err);
-            // Hata durumunda boş veri seti gönder
-            return res.render('dashboard', { 
-                personel_data: [], 
-                title: 'Genel Bakış (HATA)' 
-            }); 
-        }
-
-        // Veri çekimi başarılıysa dashboard.ejs sayfasına gönderiyoruz
-        res.render('dashboard', { 
-            personel_data: personel_results, // Frontend'de bu değişkeni kullanacağız
-            title: 'Genel Bakış'
-        });
-    });
-});
-
-// --- POST ROTASI (SIMÜLASYON VERİLERİNİ YAKALAMAK İÇİN) ---
-app.post('/', (req, res) => {
-    // Formdan gelen veriyi yakalar, ileride burada simülasyon hesabı yaparız
-    res.redirect('/'); 
-});
+// --- YENİ: Rotaları Entegre Etme ---
+// '/' adresine gelen tüm istekleri (GET, POST) mainRoutes dosyasına yönlendir.
+app.use('/', mainRoutes); 
 
 
 // Sunucuyu Başlat

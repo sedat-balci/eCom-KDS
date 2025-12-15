@@ -1,75 +1,101 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Ticaret KDS | <%= title %></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <link rel="stylesheet" href="/css/style.css"> 
-    <style>
-        /* Sidebar'ı Dark Mode'a çekelim */
-        .sidebar {
-            background-color: #1a1e27; /* Koyu lacivert */
-            color: #c9d1d9;
-            min-height: 100vh;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Ticaret KDS | <%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="/css/style.css"> 
+    <style>
+        /* Sidebar'ı Dark Mode'a çekelim */
+        .sidebar {
+            background-color: #1a1e27; /* Koyu lacivert */
+            color: #c9d1d9;
+            min-height: 100vh;
+        }
+        .main-content {
+             background-color: #0d1117; /* Siyah Arka Plan */
+        }
+        /* Range slider için koyu tema renkleri (Görünürlüğü artırır) */
+        .form-range::-webkit-slider-runnable-track {
+            background: #495057; /* Koyu gri, daha görünür */
         }
-        .main-content {
-             background-color: #0d1117; /* Siyah Arka Plan */
+        .form-range::-webkit-slider-thumb {
+            background: #00bcd4; /* Info rengi (mavi) */
         }
-    </style>
+    </style>
 </head>
 <body class="bg-dark text-light">
 
-    <div class="d-flex main-content">
-        <div class="sidebar p-3 border-end border-secondary-subtle">
-            <h5 class="text-info mb-4">DashDark KDS</h5>
-            <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action bg-transparent text-info border-0" href="/">📊 Genel Bakış</a>
-                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/personel">🧑‍🏭 Personel Planlama</a>
-                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/lojistik">🚚 Lojistik & Churn</a>
-                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/depo">📦 Depo Kapasite</a>
-                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/maliyet">💰 Maliyet Simülasyonu</a>
-            </div>
-        </div>
-        
-        <div class="w-100 p-4 main-content">
-            <header class="mb-5">
-                <h1 class="text-white">🚀 Operasyon Yönetimi Dashboard</h1>
-                <p class="text-secondary">Veritabanı bağlantısı başarılı! Şimdi veri çekimi yapacağız.</p>
-            </header>
+    <div class="d-flex main-content">
+        <div class="sidebar p-3 border-end border-secondary-subtle">
+            <h5 class="text-info mb-4">Sentinel DSS</h5>
+            <div class="list-group list-group-flush">
+                <a class="list-group-item list-group-item-action bg-transparent text-info border-0" href="/">📊 Genel Bakış</a>
+                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/personel">🧑‍🏭 Personel Planlama</a>
+                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/lojistik">🚚 Lojistik & Churn</a>
+                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/depo">📦 Depo Kapasite</a>
+                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/maliyet">💰 Maliyet Simülasyonu</a>
+            </div>
+        </div>
+        
+        <div class="w-100 p-4 main-content">
+            <header class="mb-5">
+                <h1 class="text-white">🚀 Operasyon Yönetimi Dashboard</h1>
+                <p class="text-secondary">Veritabanı bağlantısı başarılı! Şimdi veri çekimi yapacağız.</p>
+            </header>
 
-            <div class="row mb-4">
-                <div class="col-lg-3 mb-3">
-                    <div class="card bg-secondary-subtle border-secondary p-3">
-                        <p class="text-info mb-0">Toplam Personel Sayısı</p>
-                        <h2 class="text-white"><%= personel_data.length %> Kişi</h2> 
-                    </div>
-                </div>
-                </div>
+            <div class="row mb-4">
+                <div class="col-lg-3 mb-3">
+                    <div class="card bg-secondary-subtle border-secondary p-3">
+                        <p class="text-info mb-0">Toplam Personel Sayısı</p>
+                        <h2 class="text-white"><%= personel_data.length %> Kişi</h2> 
+                    </div>
+                </div>
+                </div>
 
-            <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="card bg-secondary-subtle border-secondary p-4">
-                        <h5 class="text-white">🧑‍🏭 İşgücü & Kapasite Analizi</h5>
-                        <p class="text-white-50">Sistemde kayıtlı personel listesi:</p>
-                        <ul class="list-group list-group-flush">
-                            <% personel_data.forEach(personel => { %>
-                                <li class="list-group-item text-white-50 border-secondary">
-                                    <%= personel.ad_soyad %> (<%= personel.rol %>) - <%= personel.saatlik_ucret %> TL/saat
-                                </li>
-                            <% }); %>
-                        </ul>
-                    </div>
-                </div>
-                </div>
-        </div>
-    </div>
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="card bg-secondary-subtle border-secondary p-4">
+                        <h5 class="text-white">🧑‍🏭 İşgücü & Kapasite Analizi</h5>
+                        <p class="text-white-50">Sistemde kayıtlı personel listesi:</p>
+                        <ul class="list-group list-group-flush">
+                            <% personel_data.forEach(personel => { %>
+                                <li class="list-group-item text-white-50 border-secondary">
+                                    <%= personel.ad_soyad %> (<%= personel.rol %>) - <%= personel.saatlik_ucret %> TL/saat
+                                </li>
+                            <% }); %>
+                        </ul>
+                        <div class="mt-4 p-3 border-top border-secondary-subtle">
+                            <h6 class="text-info mb-3">🛠️ Personel Simülasyon Kontrolleri</h6>
+                            
+                            <form action="/" method="POST"> 
+                                <div class="mb-3">
+                                    <label for="hedefSiparis" class="form-label text-white">Hedef Günlük Sipariş Hacmi</label> 
+                                    <input type="number" class="form-control bg-dark text-white" id="hedefSiparis" name="hedefSiparis" value="400" min="100">
+                                    <div class="form-text text-white-50">Mevcut Kapasite Tahmini: Lütfen simülasyonu çalıştırın.</div>
+                                </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/script.js"></script>
-    <script>
-        // Buraya ApexCharts Kodları ve Simülasyon Fonksiyonları Gelecek
-    </script>
+                                <div class="mb-3">
+                                    <label for="yeniPersonel" class="form-label text-white">Ek Personel Simülasyonu (<span id="personelDegisim">0</span>)</label> 
+                                    <input type="range" class="form-range" id="yeniPersonel" name="yeniPersonel" min="-2" max="5" value="0" oninput="document.getElementById('personelDegisim').textContent = this.value;">
+                                    <div class="form-text text-white-50">(-2: İşten Çıkarma, +5: Yeni Alım)</div>
+                                </div>
+
+                                <button type="submit" class="btn btn-info w-100">Simülasyonu Çalıştır</button>
+                            </form>
+                        </div>
+                                            </div>
+                </div>
+                </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/script.js"></script>
+    <script>
+        // Buraya ApexCharts Kodları ve Simülasyon Fonksiyonları Gelecek
+    </script>
 </body>
 </html>
