@@ -13,23 +13,33 @@
             background-color: #1a1e27; /* Koyu lacivert */
             color: #c9d1d9;
             min-height: 100vh;
+            /* Sidebar sabit kalmalı (Dashboard örneğinizdeki gibi) */
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
         }
         .main-content {
              background-color: #0d1117; /* Siyah Arka Plan */
+             margin-left: 200px; /* Sidebar genişliği kadar boşluk bırak */
         }
-        /* Range slider için koyu tema renkleri (Görünürlüğü artırır) */
-        .form-range::-webkit-slider-runnable-track {
-            background: #495057; /* Koyu gri, daha görünür */
+        /* Yeni satır: KPI kartlarını da 3'lü dizelim */
+        .kpi-card {
+            min-height: 100px;
         }
-        .form-range::-webkit-slider-thumb {
-            background: #00bcd4; /* Info rengi (mavi) */
-        }
+        /* Range slider için koyu tema renkleri */
+        .form-range::-webkit-slider-runnable-track {
+            background: #495057; 
+        }
+        .form-range::-webkit-slider-thumb {
+            background: #00bcd4; 
+        }
     </style>
 </head>
 <body class="bg-dark text-light">
 
-    <div class="d-flex main-content">
-        <div class="sidebar p-3 border-end border-secondary-subtle">
+    <div class="d-flex">
+        <div class="sidebar p-3 border-end border-secondary-subtle" style="width: 200px;">
             <h5 class="text-info mb-4">Sentinel DSS</h5>
             <div class="list-group list-group-flush">
                 <a class="list-group-item list-group-item-action bg-transparent text-info border-0" href="/">📊 Genel Bakış</a>
@@ -46,56 +56,103 @@
                 <p class="text-secondary">Veritabanı bağlantısı başarılı! Şimdi veri çekimi yapacağız.</p>
             </header>
 
-            <div class="row mb-4">
-                <div class="col-lg-3 mb-3">
-                    <div class="card bg-secondary-subtle border-secondary p-3">
+                        <div class="row mb-4">
+                                <div class="col-lg-4 mb-3"> 
+                    <div class="card bg-secondary-subtle border-secondary p-3 kpi-card">
                         <p class="text-info mb-0">Toplam Personel Sayısı</p>
                         <h2 class="text-white"><%= personel_data.length %> Kişi</h2> 
                     </div>
                 </div>
-                </div>
+                            </div>
 
-            <div class="row">
-                <div class="col-lg-6 mb-4">
-                    <div class="card bg-secondary-subtle border-secondary p-4">
+                        <div class="row">
+                                <div class="col-lg-4 mb-4">                     <div class="card bg-secondary-subtle border-secondary p-4">
                         <h5 class="text-white">🧑‍🏭 İşgücü & Kapasite Analizi</h5>
                         <p class="text-white-50">Sistemde kayıtlı personel listesi:</p>
-                        <ul class="list-group list-group-flush">
-                            <% personel_data.forEach(personel => { %>
+                        
+                        <div id="personel-chart" class="mb-3"></div> 
+                        
+                        <ul class="list-group list-group-flush" style="max-height: 150px; overflow-y: auto;">                             <% personel_data.forEach(personel => { %>
                                 <li class="list-group-item text-white-50 border-secondary">
                                     <%= personel.ad_soyad %> (<%= personel.rol %>) - <%= personel.saatlik_ucret %> TL/saat
                                 </li>
                             <% }); %>
                         </ul>
-                        <div class="mt-4 p-3 border-top border-secondary-subtle">
-                            <h6 class="text-info mb-3">🛠️ Personel Simülasyon Kontrolleri</h6>
+                        <div class="mt-4 p-3 border-top border-secondary-subtle">
+                            <h6 class="text-info mb-3">🛠️ Personel Simülasyon Kontrolleri</h6>
+                            
+                            <form action="/" method="POST"> 
+                                <div class="mb-3">
+                                    <label for="hedefSiparis" class="form-label text-white">Hedef Günlük Sipariş Hacmi</label> 
+                                    <input type="number" class="form-control bg-dark text-white" id="hedefSiparis" name="hedefSiparis" value="400" min="100">
+                                    <div class="form-text text-white-50">Mevcut Kapasite Tahmini: Lütfen simülasyonu çalıştırın.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="yeniPersonel" class="form-label text-white">Ek Personel Simülasyonu (<span id="personelDegisim">0</span>)</label> 
+                                    <input type="range" class="form-range" id="yeniPersonel" name="yeniPersonel" min="-2" max="5" value="0" oninput="document.getElementById('personelDegisim').textContent = this.value;">
+                                    <div class="form-text text-white-50">(-2: İşten Çıkarma, +5: Yeni Alım)</div>
+                                </div>
+
+                                <button type="submit" class="btn btn-info w-100">Simülasyonu Çalıştır</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                                <div class="col-lg-4 mb-4">                     <div class="card bg-secondary-subtle border-secondary p-4">
+                        <h5 class="text-white">🚚 Lojistik Hız & Müşteri Kaybı (Churn) Analizi</h5>
+                        <p class="text-white-50">Ortalama kargo süresi ve tahmini aylık Churn oranı kıyaslaması.</p>
+                        
+                        <div id="lojistik-chart" class="mb-3"></div> 
+                        
+                        <h6 class="text-info mt-3 mb-3">🛠️ Hız Simülasyon Kontrolleri</h6>
+                        <form action="/lojistik-simulasyon" method="POST"> 
+                            <div class="mb-3">
+                                <label for="hedefKargoHizi" class="form-label text-white">Hedef Ortalama Kargo Hızı (Gün)</label>
+                                <input type="range" class="form-range" id="hedefKargoHizi" name="hedefKargoHizi" min="1" max="5" value="3" oninput="document.getElementById('kargoHiziDegisim').textContent = this.value + ' Gün';">
+                                <div class="form-text text-white-50">Hedef Hız: <span id="kargoHiziDegisim">3 Gün</span>. Hızı değiştirmek Churn'ü nasıl etkiler?</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-info w-100">Lojistik Simülasyonu Çalıştır</button>
+                        </form>
+                    </div>
+                </div>
+                                <div class="col-lg-4 mb-4"> <div class="card bg-secondary-subtle border-secondary p-4">
+                        <h5 class="text-white">📦 Depo Kapasite & ROI Analizi</h5>
+                        <p class="text-white-50">Yeni bir depo yatırımının geri dönüş süresi (ROI) tahmini.</p>
+                        
+                        <div id="roi-chart" class="mb-3"></div> 
+                        
+                        <h6 class="text-info mt-3 mb-3">🛠️ Yatırım Simülasyon Kontrolleri</h6>
+                        <form action="/depo-simulasyon" method="POST"> 
+                            <div class="mb-3">
+                                <label for="yatirimMaliyeti" class="form-label text-white">Depo Genişletme Yatırım Maliyeti (₺)</label>
+                                <input type="number" class="form-control bg-dark text-white" id="yatirimMaliyeti" name="yatirimMaliyeti" value="100000" min="10000">
+                                <div class="form-text text-white-50">Örn: 100.000₺. Bu, sabit yatırım maliyetidir.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="ekKapasite" class="form-label text-white">Ek Günlük Kapasite Getirisi (Sipariş)</label>
+                                <input type="number" class="form-control bg-dark text-white" id="ekKapasite" name="ekKapasite" value="50" min="10">
+                                <div class="form-text text-white-50">Genişletmeyle kazanılan tahmini günlük ek sipariş sayısı.</div>
+                            </div>
                             
-                            <form action="/" method="POST"> 
-                                <div class="mb-3">
-                                    <label for="hedefSiparis" class="form-label text-white">Hedef Günlük Sipariş Hacmi</label> 
-                                    <input type="number" class="form-control bg-dark text-white" id="hedefSiparis" name="hedefSiparis" value="400" min="100">
-                                    <div class="form-text text-white-50">Mevcut Kapasite Tahmini: Lütfen simülasyonu çalıştırın.</div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="yeniPersonel" class="form-label text-white">Ek Personel Simülasyonu (<span id="personelDegisim">0</span>)</label> 
-                                    <input type="range" class="form-range" id="yeniPersonel" name="yeniPersonel" min="-2" max="5" value="0" oninput="document.getElementById('personelDegisim').textContent = this.value;">
-                                    <div class="form-text text-white-50">(-2: İşten Çıkarma, +5: Yeni Alım)</div>
-                                </div>
-
-                                <button type="submit" class="btn btn-info w-100">Simülasyonu Çalıştır</button>
-                            </form>
-                        </div>
-                                            </div>
-                </div>
-                </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+                            <button type="submit" class="btn btn-info w-100">ROI Simülasyonu Çalıştır</button>
+                        </form>
+                    </div>
+                </div>
+                            </div>
+                    </div>
+            </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/script.js"></script>
+    
+    <script id="sim-data" type="application/json">
+        <%- JSON.stringify(simResult) %>
+    </script>
+    
     <script>
-        // Buraya ApexCharts Kodları ve Simülasyon Fonksiyonları Gelecek
+        // Diğer sayfa özel scriptler buraya gelebilir
     </script>
 </body>
 </html>
