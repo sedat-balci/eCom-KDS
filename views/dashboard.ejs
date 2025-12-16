@@ -1,158 +1,250 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Ticaret KDS | <%= title %></title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <link rel="stylesheet" href="/css/style.css"> 
-    <style>
-        /* Sidebar'ı Dark Mode'a çekelim */
-        .sidebar {
-            background-color: #1a1e27; /* Koyu lacivert */
-            color: #c9d1d9;
-            min-height: 100vh;
-            /* Sidebar sabit kalmalı (Dashboard örneğinizdeki gibi) */
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Ticaret KDS | <%= title %></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link rel="stylesheet" href="/css/style.css"> 
+    <style>
+        /* --- FIGMA DESIGN TOKENS --- */
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #1a1e27;
+            --text-main: #ffffff;
+            --text-muted: #c9d1d9;
+            --accent-cyan: #00bcd4;
+            --spacing-gap: 8px; /* Kartlar arası boşluk */
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden; /* Yatay scrollu engelle */
+        }
+
+        /* Sidebar Sabitleme */
+        .sidebar {
+            background-color: var(--bg-card);
+            color: var(--text-muted);
+            width: 200px;
+            height: 100vh;
             position: fixed;
             top: 0;
             left: 0;
             z-index: 1000;
-        }
-        .main-content {
-             background-color: #0d1117; /* Siyah Arka Plan */
-             margin-left: 200px; /* Sidebar genişliği kadar boşluk bırak */
-        }
-        /* Yeni satır: KPI kartlarını da 3'lü dizelim */
-        .kpi-card {
-            min-height: 100px;
+            border-right: 1px solid #30363d;
         }
-        /* Range slider için koyu tema renkleri */
-        .form-range::-webkit-slider-runnable-track {
-            background: #495057; 
-        }
-        .form-range::-webkit-slider-thumb {
-            background: #00bcd4; 
-        }
-    </style>
+
+        /* Ana İçerik Alanı */
+        .main-content {
+             margin-left: 200px; /* Sidebar genişliği */
+             padding: 15px; /* Sayfa kenar boşluğu */
+             max-width: calc(100% - 200px);
+        }
+        
+        /* --- KOMPAKT GRID SİSTEMİ --- */
+        .row-tight {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: calc(var(--spacing-gap) * -0.5);
+            margin-left: calc(var(--spacing-gap) * -0.5);
+        }
+        
+        .col-tight {
+            flex: 0 0 auto;
+            width: 33.33333%; /* Tam 3'e böl */
+            padding-right: calc(var(--spacing-gap) * 0.5);
+            padding-left: calc(var(--spacing-gap) * 0.5);
+        }
+        
+        /* --- KART TASARIMI --- */
+        .card-figma {
+            background-color: var(--bg-card);
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+            height: 100%; /* Sütun boyunca uza */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* KPI Kartı (Çok Küçük) */
+        .kpi-mini {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            margin-bottom: var(--spacing-gap);
+        }
+        .kpi-mini h2 { font-size: 1.5rem; margin: 0; color: var(--text-main); }
+        .kpi-mini p { font-size: 0.85rem; margin: 0; color: var(--accent-cyan); }
+
+        /* İçerik Başlıkları */
+        h5 { font-size: 1rem; font-weight: 600; margin-bottom: 5px; }
+        p.desc { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px; }
+
+        /* Liste ve Kontroller */
+        .compact-list {
+            max-height: 80px; /* Çok kısa liste */
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+        }
+        .list-group-item {
+            background: transparent;
+            color: var(--text-muted);
+            border-bottom: 1px solid #30363d;
+            padding: 4px 8px;
+            font-size: 0.8rem;
+        }
+
+        .controls-area {
+            margin-top: auto; /* En alta it */
+            padding-top: 10px;
+            border-top: 1px solid #30363d;
+        }
+        
+        /* Form Elemanları (Küçültülmüş) */
+        label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px; }
+        .form-control-sm { 
+            background-color: #0d1117; 
+            border: 1px solid #30363d; 
+            color: #fff; 
+            font-size: 0.8rem;
+        }
+        .form-text { font-size: 0.65rem; color: #8b949e; margin-top: 1px; }
+        
+        /* Slider */
+        .form-range::-webkit-slider-runnable-track { background: #495057; height: 4px; }
+        .form-range::-webkit-slider-thumb { background: var(--accent-cyan); width: 12px; height: 12px; margin-top: -4px;}
+
+        /* Buton */
+        .btn-figma {
+            background-color: rgba(0, 188, 212, 0.1);
+            color: var(--accent-cyan);
+            border: 1px solid var(--accent-cyan);
+            font-size: 0.8rem;
+            padding: 5px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .btn-figma:hover {
+            background-color: var(--accent-cyan);
+            color: #000;
+        }
+
+    </style>
 </head>
-<body class="bg-dark text-light">
+<body>
 
-    <div class="d-flex">
-        <div class="sidebar p-3 border-end border-secondary-subtle" style="width: 200px;">
-            <h5 class="text-info mb-4">Sentinel DSS</h5>
-            <div class="list-group list-group-flush">
-                <a class="list-group-item list-group-item-action bg-transparent text-info border-0" href="/">📊 Genel Bakış</a>
-                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/personel">🧑‍🏭 Personel Planlama</a>
-                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/lojistik">🚚 Lojistik & Churn</a>
-                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/depo">📦 Depo Kapasite</a>
-                <a class="list-group-item list-group-item-action bg-transparent text-white border-0" href="/maliyet">💰 Maliyet Simülasyonu</a>
-            </div>
-        </div>
-        
-        <div class="w-100 p-4 main-content">
-            <header class="mb-5">
-                <h1 class="text-white">🚀 Operasyon Yönetimi Dashboard</h1>
-                <p class="text-secondary">Veritabanı bağlantısı başarılı! Şimdi veri çekimi yapacağız.</p>
-            </header>
+    <div class="sidebar p-3">
+        <h5 class="text-info mb-4 ps-2">Sentinel DSS</h5>
+        <div class="list-group list-group-flush">
+            <a class="list-group-item list-group-item-action bg-transparent text-info border-0 py-1" href="/">Genel Bakış</a>
+            <a class="list-group-item list-group-item-action bg-transparent text-white border-0 py-1" href="/personel">Personel</a>
+            <a class="list-group-item list-group-item-action bg-transparent text-white border-0 py-1" href="/lojistik">Lojistik</a>
+            <a class="list-group-item list-group-item-action bg-transparent text-white border-0 py-1" href="/depo">Depo</a>
+            <a class="list-group-item list-group-item-action bg-transparent text-white border-0 py-1" href="/maliyet">Maliyet</a>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h4 class="m-0 text-white">Operasyon Yönetimi</h4>
+                <small class="text-muted">Canlı Veri Bağlantısı Aktif</small>
+            </div>
+            <div class="card-figma kpi-mini" style="width: 250px;">
+                <p>TOPLAM PERSONEL</p>
+                <h2><%= personel_data.length %></h2> 
+            </div>
+        </div>
 
-                        <div class="row mb-4">
-                                <div class="col-lg-4 mb-3"> 
-                    <div class="card bg-secondary-subtle border-secondary p-3 kpi-card">
-                        <p class="text-info mb-0">Toplam Personel Sayısı</p>
-                        <h2 class="text-white"><%= personel_data.length %> Kişi</h2> 
-                    </div>
-                </div>
-                            </div>
+        <div class="row-tight">
+            
+            <div class="col-tight">
+                <div class="card-figma">
+                    <h5>🧑‍🏭 İşgücü & Kapasite</h5>
+                    <p class="desc">Mevcut vs Hedef Kapasite Analizi</p>
+                    
+                    <div id="personel-chart" class="mb-2"></div>
+                    
+                    <ul class="list-group compact-list"> 
+                        <% personel_data.forEach(personel => { %>
+                            <li class="list-group-item">
+                                <%= personel.ad_soyad %> - <%= personel.rol %>
+                            </li>
+                        <% }); %>
+                    </ul>
 
-                        <div class="row">
-                                <div class="col-lg-4 mb-4">                     <div class="card bg-secondary-subtle border-secondary p-4">
-                        <h5 class="text-white">🧑‍🏭 İşgücü & Kapasite Analizi</h5>
-                        <p class="text-white-50">Sistemde kayıtlı personel listesi:</p>
-                        
-                        <div id="personel-chart" class="mb-3"></div> 
-                        
-                        <ul class="list-group list-group-flush" style="max-height: 150px; overflow-y: auto;">                             <% personel_data.forEach(personel => { %>
-                                <li class="list-group-item text-white-50 border-secondary">
-                                    <%= personel.ad_soyad %> (<%= personel.rol %>) - <%= personel.saatlik_ucret %> TL/saat
-                                </li>
-                            <% }); %>
-                        </ul>
-                        <div class="mt-4 p-3 border-top border-secondary-subtle">
-                            <h6 class="text-info mb-3">🛠️ Personel Simülasyon Kontrolleri</h6>
-                            
-                            <form action="/" method="POST"> 
-                                <div class="mb-3">
-                                    <label for="hedefSiparis" class="form-label text-white">Hedef Günlük Sipariş Hacmi</label> 
-                                    <input type="number" class="form-control bg-dark text-white" id="hedefSiparis" name="hedefSiparis" value="400" min="100">
-                                    <div class="form-text text-white-50">Mevcut Kapasite Tahmini: Lütfen simülasyonu çalıştırın.</div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="yeniPersonel" class="form-label text-white">Ek Personel Simülasyonu (<span id="personelDegisim">0</span>)</label> 
-                                    <input type="range" class="form-range" id="yeniPersonel" name="yeniPersonel" min="-2" max="5" value="0" oninput="document.getElementById('personelDegisim').textContent = this.value;">
-                                    <div class="form-text text-white-50">(-2: İşten Çıkarma, +5: Yeni Alım)</div>
-                                </div>
-
-                                <button type="submit" class="btn btn-info w-100">Simülasyonu Çalıştır</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                                <div class="col-lg-4 mb-4">                     <div class="card bg-secondary-subtle border-secondary p-4">
-                        <h5 class="text-white">🚚 Lojistik Hız & Müşteri Kaybı (Churn) Analizi</h5>
-                        <p class="text-white-50">Ortalama kargo süresi ve tahmini aylık Churn oranı kıyaslaması.</p>
-                        
-                        <div id="lojistik-chart" class="mb-3"></div> 
-                        
-                        <h6 class="text-info mt-3 mb-3">🛠️ Hız Simülasyon Kontrolleri</h6>
-                        <form action="/lojistik-simulasyon" method="POST"> 
-                            <div class="mb-3">
-                                <label for="hedefKargoHizi" class="form-label text-white">Hedef Ortalama Kargo Hızı (Gün)</label>
-                                <input type="range" class="form-range" id="hedefKargoHizi" name="hedefKargoHizi" min="1" max="5" value="3" oninput="document.getElementById('kargoHiziDegisim').textContent = this.value + ' Gün';">
-                                <div class="form-text text-white-50">Hedef Hız: <span id="kargoHiziDegisim">3 Gün</span>. Hızı değiştirmek Churn'ü nasıl etkiler?</div>
-                            </div>
-
-                            <button type="submit" class="btn btn-info w-100">Lojistik Simülasyonu Çalıştır</button>
-                        </form>
-                    </div>
-                </div>
-                                <div class="col-lg-4 mb-4"> <div class="card bg-secondary-subtle border-secondary p-4">
-                        <h5 class="text-white">📦 Depo Kapasite & ROI Analizi</h5>
-                        <p class="text-white-50">Yeni bir depo yatırımının geri dönüş süresi (ROI) tahmini.</p>
-                        
-                        <div id="roi-chart" class="mb-3"></div> 
-                        
-                        <h6 class="text-info mt-3 mb-3">🛠️ Yatırım Simülasyon Kontrolleri</h6>
-                        <form action="/depo-simulasyon" method="POST"> 
-                            <div class="mb-3">
-                                <label for="yatirimMaliyeti" class="form-label text-white">Depo Genişletme Yatırım Maliyeti (₺)</label>
-                                <input type="number" class="form-control bg-dark text-white" id="yatirimMaliyeti" name="yatirimMaliyeti" value="100000" min="10000">
-                                <div class="form-text text-white-50">Örn: 100.000₺. Bu, sabit yatırım maliyetidir.</div>
+                    <div class="controls-area">
+                        <form action="/" method="POST"> 
+                            <div class="mb-2">
+                                <label>Hedef Sipariş</label> 
+                                <input type="number" class="form-control form-control-sm" name="hedefSiparis" value="400">
                             </div>
-
                             <div class="mb-3">
-                                <label for="ekKapasite" class="form-label text-white">Ek Günlük Kapasite Getirisi (Sipariş)</label>
-                                <input type="number" class="form-control bg-dark text-white" id="ekKapasite" name="ekKapasite" value="50" min="10">
-                                <div class="form-text text-white-50">Genişletmeyle kazanılan tahmini günlük ek sipariş sayısı.</div>
+                                <label>Ek Personel: <span id="personelLabel">0</span></label> 
+                                <input type="range" class="form-range" name="yeniPersonel" min="-2" max="5" value="0" oninput="document.getElementById('personelLabel').innerText = this.value">
                             </div>
-                            
-                            <button type="submit" class="btn btn-info w-100">ROI Simülasyonu Çalıştır</button>
+                            <button type="submit" class="btn btn-figma">Simüle Et</button>
                         </form>
                     </div>
                 </div>
-                            </div>
-                    </div>
-            </div>
+            </div>
+
+            <div class="col-tight">
+                <div class="card-figma">
+                    <h5>🚚 Lojistik & Churn</h5>
+                    <p class="desc">Kargo Hızı ve Müşteri Kaybı</p>
+                    
+                    <div id="lojistik-chart" class="mb-2"></div>
+                    
+                    <div class="mb-2"></div> <div class="controls-area mt-auto">
+                        <form action="/lojistik-simulasyon" method="POST"> 
+                            <div class="mb-4"> <label>Hedef Kargo Hızı (Gün): <span id="hizLabel">3</span></label>
+                                <input type="range" class="form-range" name="hedefKargoHizi" min="1" max="5" value="3" oninput="document.getElementById('hizLabel').innerText = this.value">
+                                <div class="form-text">Düşük süre = Düşük Churn</div>
+                            </div>
+                            <button type="submit" class="btn btn-figma">Simüle Et</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-tight">
+                <div class="card-figma">
+                    <h5>📦 Depo & ROI Yatırım</h5>
+                    <p class="desc">Yatırım Geri Dönüş Süresi</p>
+                    
+                    <div id="roi-chart" class="mb-2"></div>
+
+                    <div class="controls-area">
+                        <form action="/depo-simulasyon" method="POST"> 
+                            <div class="mb-2">
+                                <label>Yatırım Tutarı (₺)</label>
+                                <input type="number" class="form-control form-control-sm" name="yatirimMaliyeti" value="100000">
+                            </div>
+                            <div class="mb-3">
+                                <label>Ek Günlük Sipariş</label>
+                                <input type="number" class="form-control form-control-sm" name="ekKapasite" value="50">
+                            </div>
+                            <button type="submit" class="btn btn-figma">Simüle Et</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+        </div> </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/script.js"></script>
-    
+    <script src="/js/script.js"></script>
     <script id="sim-data" type="application/json">
         <%- JSON.stringify(simResult) %>
     </script>
-    
-    <script>
-        // Diğer sayfa özel scriptler buraya gelebilir
-    </script>
 </body>
 </html>
