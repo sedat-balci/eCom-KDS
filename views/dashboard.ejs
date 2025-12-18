@@ -3,89 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Ticaret KDS | <%= title %></title>
+    <title>E-Ticaret KDS | Yönetici Kokpiti</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <link rel="stylesheet" href="/css/style.css"> 
     <style>
-        /* Önceki CSS kodlarının aynısı */
-        :root {
-            --bg-dark: #0d1117;
-            --bg-card: #161b22; 
-            --text-main: #c9d1d9;
-            --text-header: #f0f6fc;
-            --accent-cyan: #2f81f7;
-            --border-color: #30363d;
-        }
-        body { background-color: var(--bg-dark); color: var(--text-main); overflow-x: hidden; }
-        .navbar-custom { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 0.75rem 1.5rem; }
-        .navbar-brand { font-weight: 700; color: var(--text-header) !important; }
-        .main-content { padding: 20px; max-width: 1600px; margin: 0 auto; }
-        .card-figma { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; height: 100%; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h5 { color: var(--text-header); font-size: 1rem; font-weight: 600; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
-        .desc { font-size: 0.8rem; color: #8b949e; margin-bottom: 15px; }
-        .compact-list { max-height: 100px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 6px; margin-bottom: 15px; }
-        .list-group-item { background: transparent; color: var(--text-main); border-bottom: 1px solid var(--border-color); font-size: 0.85rem; padding: 8px; }
+        :root { --bg-dark: #0d1117; --bg-card: #161b22; --text-main: #c9d1d9; --text-header: #f0f6fc; --accent-cyan: #2f81f7; --border-color: #30363d; }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-custom { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 0.8rem 2rem; }
+        .navbar-brand { font-weight: 700; color: var(--text-header) !important; font-size: 1.3rem; }
+        .main-content { padding: 30px; max-width: 1600px; margin: 0 auto; }
+        .card-figma { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; height: 100%; display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: transform 0.2s; }
+        .card-figma:hover { border-color: #58a6ff; }
+        h5 { color: var(--text-header); font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
+        .desc { font-size: 0.85rem; color: #8b949e; margin-bottom: 15px; }
+        .compact-list { max-height: 120px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; }
+        .list-group-item { background: transparent; color: var(--text-main); border-bottom: 1px solid var(--border-color); font-size: 0.9rem; padding: 10px; }
         .form-control-sm, .form-select-sm { background-color: #0d1117; border: 1px solid var(--border-color); color: var(--text-header); }
-        .btn-figma { background-color: var(--accent-cyan); color: #fff; border: none; font-weight: 600; font-size: 0.85rem; padding: 8px; width: 100%; border-radius: 6px; margin-top: 10px; }
-        .btn-figma:hover { background-color: #58a6ff; }
+        .btn-figma { background-color: var(--accent-cyan); color: #fff; border: none; font-weight: 600; padding: 10px; width: 100%; border-radius: 8px; margin-top: 15px; transition: background 0.2s; }
+        .btn-figma:hover { background-color: #1f6feb; }
         .row-tight { --bs-gutter-x: 1.5rem; --bs-gutter-y: 1.5rem; }
-        .form-range::-webkit-slider-runnable-track { background: #30363d; height: 6px; border-radius: 3px;}
-        .form-range::-webkit-slider-thumb { background: var(--accent-cyan); margin-top: -5px; }
-        
-        /* Sonuç Mesajları için Stil */
-        .result-box {
-            font-size: 0.8rem;
-            margin-top: 10px;
-            padding: 8px;
-            border-radius: 4px;
-            display: none; /* Başlangıçta gizli */
-        }
+        .result-box { font-size: 0.9rem; margin-top: 15px; padding: 12px; border-radius: 6px; display: none; font-weight: 500; }
+        input[type=range] { cursor: pointer; }
     </style>
 </head>
 <body>
 
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#"><i class="fa-solid fa-layer-group me-2"></i>Sentinel DSS</a>
-            <div class="d-flex align-items-center gap-3">
-                <div class="text-end d-none d-md-block">
-                    <div style="font-size: 0.85rem; color: #fff;">Operasyon Yönetimi</div>
-                    <div style="font-size: 0.75rem; color: #2f81f7;"><i class="fa-solid fa-circle fa-2xs me-1"></i>Sistem Çevrimiçi</div>
-                </div>
+            <a class="navbar-brand" href="#"><i class="fa-solid fa-layer-group me-2"></i>Sentinel DSS <span class="badge bg-primary fs-6 ms-2">PRO</span></a>
+            <div class="text-end d-none d-md-block">
+                <div class="text-white small">Sistem Durumu</div>
+                <div style="font-size: 0.8rem; color: #2ea043;"><i class="fa-solid fa-server me-1"></i>Online • 7 Modül Aktif</div>
             </div>
         </div>
     </nav>
     
     <div class="main-content">
         <div class="row row-tight">
-            
             <div class="col-lg-4">
                 <div class="card-figma">
                     <h5><i class="fa-solid fa-users-gear text-primary"></i> İşgücü & Kapasite</h5>
-                    <p class="desc">Mevcut kadro ile hedef kapasite analizi.</p>
-                    
+                    <p class="desc">Fazla mesai mi, yeni personel mi?</p>
                     <div id="personel-chart" class="mb-2"></div>
-                    
                     <ul class="list-group compact-list"> 
-                        <% personel_data.forEach(personel => { %>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <span><%= personel.ad_soyad %></span>
-                                <span class="badge bg-secondary"><%= personel.rol %></span>
-                            </li>
+                        <% personel_data.forEach(p => { %>
+                            <li class="list-group-item d-flex justify-content-between"><span><%= p.ad_soyad %></span><span class="badge bg-secondary"><%= p.rol %></span></li>
                         <% }); %>
                     </ul>
-
                     <div class="mt-auto">
-                        <div class="mb-2">
-                            <label>Hedef Sipariş Hacmi</label> 
-                            <input type="number" class="form-control form-control-sm" id="hedefSiparis" value="400">
-                        </div>
-                        <div class="mb-2">
-                            <label>Personel Değişimi: <strong id="personelLabel" class="text-info">0</strong></label> 
-                            <input type="range" class="form-range" id="yeniPersonel" min="-2" max="5" value="0" oninput="document.getElementById('personelLabel').innerText = (this.value > 0 ? '+' : '') + this.value">
-                        </div>
+                        <input type="number" class="form-control form-control-sm mb-2" id="hedefSiparis" value="400" placeholder="Hedef Sipariş">
+                        <label>Personel Farkı: <strong id="personelLabel" class="text-info">0</strong></label>
+                        <input type="range" class="form-range" id="yeniPersonel" min="-2" max="5" value="0" oninput="document.getElementById('personelLabel').innerText = this.value">
                         <button class="btn btn-figma" onclick="runPersonelSim()">Analiz Et</button>
                         <div id="personel-result" class="result-box bg-dark border border-secondary text-white"></div>
                     </div>
@@ -95,18 +64,11 @@
             <div class="col-lg-4">
                 <div class="card-figma">
                     <h5><i class="fa-solid fa-truck-fast text-warning"></i> Lojistik & Churn</h5>
-                    <p class="desc">Kargo hızının müşteri kaybına etkisi.</p>
-                    
+                    <p class="desc">Hız vs Müşteri Kaybı dengesi.</p>
                     <div id="lojistik-chart" class="mb-3"></div>
-                    
                     <div class="mt-auto">
-                        <div class="mb-4"> 
-                            <label class="d-flex justify-content-between">
-                                <span>Hedef Teslimat (Gün)</span>
-                                <strong id="hizLabel" class="text-warning">3 Gün</strong>
-                            </label>
-                            <input type="range" class="form-range" id="hedefKargoHizi" min="1" max="5" value="3" oninput="document.getElementById('hizLabel').innerText = this.value + ' Gün'">
-                        </div>
+                        <label class="d-flex justify-content-between"><span>Hedef Hız</span><strong id="hizLabel" class="text-warning">3 Gün</strong></label>
+                        <input type="range" class="form-range mb-4" id="hedefKargoHizi" min="1" max="5" value="3" oninput="document.getElementById('hizLabel').innerText = this.value + ' Gün'">
                         <button class="btn btn-figma" onclick="runLojistikSim()">Analiz Et</button>
                         <div id="lojistik-result" class="result-box bg-dark border border-secondary text-white"></div>
                     </div>
@@ -116,30 +78,96 @@
             <div class="col-lg-4">
                 <div class="card-figma">
                     <h5><i class="fa-solid fa-warehouse text-success"></i> Depo Yatırım ROI</h5>
-                    <p class="desc">Kapasite artış yatırımının geri dönüşü.</p>
-                    
+                    <p class="desc">Genişleme yatırımı ne zaman döner?</p>
                     <div id="roi-chart" class="mb-2"></div>
-
                     <div class="mt-auto">
-                        <div class="row g-2 mb-2">
-                            <div class="col-6">
-                                <label>Yatırım (₺)</label>
-                                <input type="number" class="form-control form-control-sm" id="yatirimMaliyeti" value="100000">
-                            </div>
-                            <div class="col-6">
-                                <label>Ek Sipariş/Gün</label>
-                                <input type="number" class="form-control form-control-sm" id="ekKapasite" value="50">
-                            </div>
+                        <div class="row g-2">
+                            <div class="col-6"><input type="number" class="form-control form-control-sm" id="yatirimMaliyeti" value="100000" placeholder="Yatırım TL"></div>
+                            <div class="col-6"><input type="number" class="form-control form-control-sm" id="ekKapasite" value="50" placeholder="Ek Sipariş"></div>
                         </div>
                         <button class="btn btn-figma" onclick="runDepoSim()">Analiz Et</button>
                         <div id="depo-result" class="result-box bg-dark border border-secondary text-white"></div>
                     </div>
                 </div>
             </div>
-
         </div> 
-    </div>
 
+        <div class="row row-tight mt-3">
+            <div class="col-lg-8"> 
+                <div class="card-figma">
+                    <h5><i class="fa-solid fa-chart-line text-danger"></i> Gelecek Projeksiyonu (Trend)</h5>
+                    <p class="desc">Yapay zeka destekli depo doluluk tahmini (1 Milyon Satır Veri).</p>
+                    <div id="trend-chart" class="mb-2" style="min-height: 250px;"></div>
+                    <div class="mt-auto pt-3 border-top border-secondary">
+                        <div class="d-flex gap-3 align-items-end">
+                            <div class="flex-grow-1">
+                                <label>Depo Kapasitesi</label>
+                                <input type="number" class="form-control form-control-sm" id="depoKapasitesi" value="300000">
+                            </div>
+                            <button class="btn btn-figma w-auto px-4 m-0" onclick="runTrendSim()">Trendi Hesapla</button>
+                        </div>
+                        <div id="trend-result" class="result-box bg-dark border border-secondary text-white"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card-figma">
+                    <h5><i class="fa-solid fa-rotate-left text-info"></i> İade Politikası</h5>
+                    <p class="desc">Ücretli iadenin kârlılığa etkisi.</p>
+                    <div id="iade-chart" class="mb-2"></div>
+                    <div class="mt-auto">
+                        <input type="number" class="form-control form-control-sm mb-2" id="iadeMaliyeti" value="50" placeholder="İade Maliyeti (TL)">
+                        <label class="d-flex justify-content-between"><span>Satış Kaybı</span><strong id="kayipLabel" class="text-danger">%10</strong></label>
+                        <input type="range" class="form-range" id="satisKaybiOrani" min="0" max="50" value="10" oninput="document.getElementById('kayipLabel').innerText = '%' + this.value">
+                        <button class="btn btn-figma" onclick="runIadeSim()">Simüle Et</button>
+                        <div id="iade-result" class="result-box bg-dark border border-secondary text-white"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row row-tight mt-3">
+            <div class="col-lg-6">
+                <div class="card-figma">
+                    <h5><i class="fa-solid fa-server text-warning"></i> Kampanya Yük Testi</h5>
+                    <p class="desc">Beklenen kullanıcı trafiğinde site çöker mi?</p>
+                    <div class="d-flex align-items-center">
+                        <div id="sunucu-chart" style="width: 200px;"></div>
+                        <div class="flex-grow-1 ps-3">
+                            <label>Kampanya Anlık Ziyaretçi Tahmini</label>
+                            <input type="number" class="form-control form-control-sm mb-2" id="beklenenKullanici" value="500">
+                            <button class="btn btn-figma" onclick="runSunucuSim()">Load Test Başlat</button>
+                        </div>
+                    </div>
+                    <div id="sunucu-result" class="result-box bg-dark border border-secondary text-white"></div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card-figma">
+                    <h5><i class="fa-solid fa-piggy-bank text-success"></i> Ambalaj Maliyet Analizi</h5>
+                    <p class="desc">Koli başı küçük indirimlerin devasa etkisi.</p>
+                    <div class="d-flex align-items-center justify-content-between py-3">
+                        <div>
+                            <h1 class="display-5 fw-bold text-success mb-0" id="kazancDisplay">0 TL</h1>
+                            <small class="text-muted">Tahmini Yıllık Ek Kazanç</small>
+                        </div>
+                        <i class="fa-solid fa-money-bill-trend-up fa-4x text-success opacity-25"></i>
+                    </div>
+                    <div class="mt-auto">
+                        <label>Birim Tasarruf (TL/Koli)</label>
+                        <input type="number" class="form-control form-control-sm" id="tasarrufBirim" value="0.50" step="0.10">
+                        <button class="btn btn-figma" onclick="runMaliyetSim()">Projeksiyonu Gör</button>
+                        <div id="maliyet-result" class="result-box bg-dark border border-secondary text-white"></div>
+                    </div>
+                </div>
+            </div>
+        </div> <footer class="mt-5 text-center text-muted small">
+            <p>&copy; 2025 Sentinel DSS v1.0 • Tüm Hakları Saklıdır.</p>
+        </footer>
+
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/script.js"></script>
 </body>

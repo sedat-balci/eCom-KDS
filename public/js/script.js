@@ -8,138 +8,119 @@ const commonOptions = {
     tooltip: { theme: 'dark' }
 };
 
-// --- CHART INSTANCE'LARI (Güncellemek için global tutuyoruz) ---
-let chartPersonel, chartLojistik, chartRoi;
+let chartPersonel, chartLojistik, chartRoi, chartTrend, chartIade, chartSunucu;
 
-// --- 1. RENDER FONKSİYONLARI ---
+// --- INIT FONKSİYONLARI ---
 
 function initPersonelChart(mevcut, hedef) {
-    const options = {
-        ...commonOptions,
-        chart: { ...commonOptions.chart, type: 'bar' },
-        series: [{ name: 'Kapasite', data: [mevcut, hedef] }],
-        plotOptions: { bar: { horizontal: true, borderRadius: 4, distributed: true } },
-        xaxis: { categories: ['Mevcut', 'Hedef'] },
-        colors: ['#00bcd4', '#F73D93']
-    };
-    chartPersonel = new ApexCharts(document.querySelector("#personel-chart"), options);
-    chartPersonel.render();
+    const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'bar' }, series: [{ name: 'Kapasite', data: [mevcut, hedef] }], plotOptions: { bar: { horizontal: true, borderRadius: 4, distributed: true } }, xaxis: { categories: ['Mevcut', 'Hedef'] }, colors: ['#00bcd4', '#F73D93'] };
+    chartPersonel = new ApexCharts(document.querySelector("#personel-chart"), options); chartPersonel.render();
 }
-
 function initLojistikChart(mevcut, yeni) {
-    const options = {
-        ...commonOptions,
-        chart: { ...commonOptions.chart, type: 'donut' },
-        series: [mevcut, yeni],
-        labels: ['Mevcut', 'Simüle'],
-        colors: ['#FFC107', '#00bcd4'],
-        plotOptions: { pie: { donut: { size: '65%' } } },
-        legend: { position: 'bottom', fontSize: '12px' }
-    };
-    chartLojistik = new ApexCharts(document.querySelector("#lojistik-chart"), options);
-    chartLojistik.render();
+    const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'donut' }, series: [mevcut, yeni], labels: ['Mevcut', 'Simüle'], colors: ['#FFC107', '#00bcd4'], plotOptions: { pie: { donut: { size: '65%' } } }, legend: { position: 'bottom' } };
+    chartLojistik = new ApexCharts(document.querySelector("#lojistik-chart"), options); chartLojistik.render();
 }
-
 function initRoiChart(yatirim, ekKar) {
-    const roiAy = yatirim / ekKar;
-    const data = [];
-    const labels = [];
-    // Varsayılan ilk çizim için basit veri
-    for(let i=0; i<= 12; i++) {
-        labels.push(i);
-        data.push(Math.max(0, yatirim - (ekKar * i)));
-    }
-    
-    const options = {
-        ...commonOptions,
-        chart: { ...commonOptions.chart, type: 'area' },
-        series: [{ name: 'Kalan Borç', data: data }],
-        stroke: { curve: 'smooth', width: 2 },
-        colors: ['#00E396'],
-        fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } },
-        xaxis: { categories: labels }
-    };
-    chartRoi = new ApexCharts(document.querySelector("#roi-chart"), options);
-    chartRoi.render();
+    const data = []; for(let i=0; i<=12; i++) data.push(Math.max(0, yatirim - (ekKar * i)));
+    const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'area' }, series: [{ name: 'Kalan Borç', data }], stroke: { curve: 'smooth' }, colors: ['#00E396'], fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } } };
+    chartRoi = new ApexCharts(document.querySelector("#roi-chart"), options); chartRoi.render();
+}
+function initTrendChart() {
+    const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'line', height: 250 }, series: [], stroke: { width: [3, 3, 2], dashArray: [0, 5, 0] }, colors: ['#2f81f7', '#f778ba', '#ff4560'], noData: { text: 'Analiz Bekleniyor...' } };
+    chartTrend = new ApexCharts(document.querySelector("#trend-chart"), options); chartTrend.render();
+}
+function initIadeChart() {
+    const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'bar', height: 200 }, series: [{ name: 'Tutar', data: [0, 0, 0] }], xaxis: { categories: ['Tasarruf', 'Kayıp', 'NET'] }, colors: ['#00E396', '#FF4560', '#2f81f7'], plotOptions: { bar: { distributed: true, borderRadius: 4 } } };
+    chartIade = new ApexCharts(document.querySelector("#iade-chart"), options); chartIade.render();
 }
 
-// --- 2. SİMÜLASYON FONKSİYONLARI (AJAX) ---
+// YENİ: SUNUCU GAUGE CHART
+function initSunucuChart() {
+    const options = {
+        series: [0],
+        chart: { type: 'radialBar', height: 200, foreColor: '#c9d1d9' },
+        plotOptions: {
+            radialBar: {
+                startAngle: -135, endAngle: 135,
+                hollow: { size: '70%' },
+                track: { background: '#30363d' },
+                dataLabels: {
+                    value: { fontSize: '22px', color: '#fff', formatter: val => val + "%" },
+                    name: { show: true, label: 'Yük', color: '#8b949e' }
+                }
+            }
+        },
+        fill: {
+            type: 'gradient',
+            gradient: { shade: 'dark', type: 'horizontal', gradientToColors: ['#FF4560'], stops: [0, 100] }
+        },
+        stroke: { lineCap: 'round' },
+        colors: ['#00E396'] // Yeşilden Kırmızıya
+    };
+    chartSunucu = new ApexCharts(document.querySelector("#sunucu-chart"), options);
+    chartSunucu.render();
+}
+
+// --- SİMÜLASYON FONKSİYONLARI ---
 
 async function runPersonelSim() {
-    const hedefSiparis = document.getElementById('hedefSiparis').value;
-    const yeniPersonel = document.getElementById('yeniPersonel').value;
-
-    const res = await fetch('/api/personel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hedefSiparis, yeniPersonel })
-    });
+    const res = await fetch('/api/personel', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ hedefSiparis: document.getElementById('hedefSiparis').value, yeniPersonel: document.getElementById('yeniPersonel').value }) });
     const data = await res.json();
-
-    // Grafiği Güncelle
     chartPersonel.updateSeries([{ data: [data.mevcutKapasite, data.hedefKapasite] }]);
-    
-    // Mesajı Göster
-    const resultBox = document.getElementById('personel-result');
-    resultBox.style.display = 'block';
-    resultBox.innerHTML = data.mesaj;
+    showResult('personel-result', data.mesaj);
 }
-
 async function runLojistikSim() {
-    const hedefKargoHizi = document.getElementById('hedefKargoHizi').value;
-
-    const res = await fetch('/api/lojistik', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ hedefKargoHizi })
-    });
+    const res = await fetch('/api/lojistik', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ hedefKargoHizi: document.getElementById('hedefKargoHizi').value }) });
     const data = await res.json();
-
     chartLojistik.updateSeries([data.temelChurn * 100, data.yeniChurn * 100]);
-    
-    const resultBox = document.getElementById('lojistik-result');
-    resultBox.style.display = 'block';
-    resultBox.innerHTML = data.mesaj;
+    showResult('lojistik-result', data.mesaj);
 }
-
 async function runDepoSim() {
-    const yatirimMaliyeti = document.getElementById('yatirimMaliyeti').value;
-    const ekKapasite = document.getElementById('ekKapasite').value;
-
-    const res = await fetch('/api/depo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ yatirimMaliyeti, ekKapasite })
-    });
+    const res = await fetch('/api/depo', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ yatirimMaliyeti: document.getElementById('yatirimMaliyeti').value, ekKapasite: document.getElementById('ekKapasite').value }) });
     const data = await res.json();
-
-    // ROI Grafiğini yeniden hesapla ve çiz
-    const newData = [];
-    const newLabels = [];
-    for(let i=0; i<= Math.min(data.roiAy + 2, 24); i++) {
-        newLabels.push(i);
-        newData.push(Math.max(0, data.yatirimMaliyeti - (data.ekAylikNetKar * i)));
-    }
-    
-    chartRoi.updateOptions({ xaxis: { categories: newLabels } });
-    chartRoi.updateSeries([{ data: newData }]);
-
-    const resultBox = document.getElementById('depo-result');
-    resultBox.style.display = 'block';
-    resultBox.innerHTML = data.mesaj;
+    chartRoi.updateSeries([{ data: Array.from({length:13}, (_, i) => Math.max(0, data.yatirimMaliyeti - (data.ekAylikNetKar * i))) }]);
+    showResult('depo-result', data.mesaj);
+}
+async function runTrendSim() {
+    document.getElementById('trend-result').style.display = 'block'; document.getElementById('trend-result').innerText = '⏳ Hesaplamalar yapılıyor...';
+    const res = await fetch('/api/depo-trend', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ depoKapasitesi: document.getElementById('depoKapasitesi').value }) });
+    const data = await res.json();
+    chartTrend.updateOptions({ xaxis: { categories: data.labels } });
+    chartTrend.updateSeries([{ name: 'Gerçekleşen', data: data.historical }, { name: 'Tahmin', data: data.forecast }, { name: 'Sınır', data: new Array(data.labels.length).fill(parseInt(data.capacity)) }]);
+    showResult('trend-result', data.mesaj);
+}
+async function runIadeSim() {
+    const res = await fetch('/api/iade', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ iadeMaliyeti: document.getElementById('iadeMaliyeti').value, satisKaybiOrani: document.getElementById('satisKaybiOrani').value }) });
+    const data = await res.json();
+    chartIade.updateSeries([{ data: [Math.floor(data.tasarruf), Math.floor(-data.zarar), Math.floor(data.netEtki)] }]);
+    showResult('iade-result', data.mesaj);
 }
 
-// --- 3. BAŞLANGIÇ (Sayfa Yüklendiğinde Varsayılan Grafikler) ---
+// YENİ: SUNUCU SİMÜLASYONU
+async function runSunucuSim() {
+    const res = await fetch('/api/sunucu', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ beklenenKullanici: document.getElementById('beklenenKullanici').value }) });
+    const data = await res.json();
+    chartSunucu.updateSeries([data.dolulukOrani]);
+    showResult('sunucu-result', data.mesaj);
+}
+
+// YENİ: MALİYET SİMÜLASYONU
+async function runMaliyetSim() {
+    const res = await fetch('/api/maliyet', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ tasarrufBirim: document.getElementById('tasarrufBirim').value }) });
+    const data = await res.json();
+    document.getElementById('kazancDisplay').innerText = data.yillikKazanc.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' });
+    showResult('maliyet-result', data.mesaj);
+}
+
+// Yardımcı: Sonuç Gösterme
+function showResult(elementId, msg) {
+    const el = document.getElementById(elementId);
+    el.style.display = 'block';
+    el.innerHTML = msg;
+    el.className = 'result-box text-white mt-2 ' + (msg.includes('🟢') || msg.includes('GÜVENLİ') ? 'bg-success bg-opacity-25 border border-success' : 'bg-danger bg-opacity-25 border border-danger');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    // Sayfa açılır açılmaz boş grafikler yerine varsayılan dolu grafikler gösteriyoruz
-    // Böylece kullanıcı hesaplama yapmadan önce de bir şeyler görür.
-    
-    // Personel: Varsayılan 400 kapasite
-    initPersonelChart(350, 400); 
-
-    // Lojistik: Varsayılan %5 ve %4 churn
-    initLojistikChart(5, 5); 
-
-    // Depo: Varsayılan 100k yatırım
-    initRoiChart(100000, 50 * 40 * 22); 
+    initPersonelChart(350, 400); initLojistikChart(5, 5); initRoiChart(100000, 44000); initTrendChart(); initIadeChart();
+    initSunucuChart(); // Yeni
 });
