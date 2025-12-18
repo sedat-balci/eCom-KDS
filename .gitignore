@@ -6,4 +6,4 @@ config/db.js
 
 # Çalışma ve Geçici Dosyalar
 .DS_Store
-*.log
+*.logdata.csv
