@@ -9,11 +9,11 @@ const depoController = require('../controllers/depoController');
 const trendController = require('../controllers/trendController');
 const iadeController = require('../controllers/iadeController');
 const sunucuController = require('../controllers/sunucuController');
-const maliyetController = require('../controllers/maliyetController'); // SON MODÜL EKLENDİ ✅
+const maliyetController = require('../controllers/maliyetController');
 
 // --- 1. ANA SAYFA (View Render) ---
 router.get('/', (req, res) => {
-    // Sadece ana sayfa verisi için burada küçük bir sorgu bıraktık (View Model)
+    // Ana sayfa için temel personel listesini çekiyoruz (View Model)
     const sql = `SELECT id, ad_soyad, rol, saatlik_ucret FROM personel`;
     db.query(sql, (err, personel_results) => {
         if (err) {
@@ -26,8 +26,11 @@ router.get('/', (req, res) => {
 
 // --- API ROTALARI (Hepsi Controller'a Bağlandı) ---
 
-// 1. Personel Simülasyonu
+// 1. Personel Simülasyonu (İşgücü Bütçeleme)
 router.post('/api/personel', personelController.hesapla);
+
+// [YENİ] Parametre Güncelleme (Maaş/Mesai Ayarları)
+router.post('/api/parametre-guncelle', personelController.parametreGuncelle);
 
 // 2. Lojistik Simülasyonu
 router.post('/api/lojistik', lojistikController.hesapla);
@@ -41,10 +44,27 @@ router.post('/api/depo-trend', trendController.hesapla);
 // 5. İade Politikası Analizi
 router.post('/api/iade', iadeController.hesapla);
 
-// 6. Sunucu Yük Testi
+// 6. Sunucu Yük Testi (IT Altyapı)
 router.post('/api/sunucu', sunucuController.hesapla);
 
 // 7. Sarf Malzeme (Maliyet) Tasarrufu
 router.post('/api/maliyet', maliyetController.hesapla);
+
+// ... (Üstteki diğer importlar ve rotalar aynen kalsın) ...
+
+// SİMÜLASYON CONTROLLER İMPORTU
+const simulasyonController = require('../controllers/simulasyonController');
+
+// --- SİMÜLASYON API ROTALARI ---
+// 1. Yeni sipariş yarat
+router.post('/api/simulasyon/olustur', simulasyonController.siparisOlustur);
+
+// 2. Sipariş durumu güncelle
+router.post('/api/simulasyon/guncelle', simulasyonController.durumGuncelle);
+
+// 3. Sipariş listesini çek
+router.get('/api/simulasyon/liste', simulasyonController.sonSiparisleriGetir);
+
+module.exports = router;
 
 module.exports = router;

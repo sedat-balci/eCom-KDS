@@ -18,12 +18,11 @@
         .card-figma { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; height: 100%; display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: transform 0.2s; }
         .card-figma:hover { border-color: #58a6ff; }
         
-        /* Özel Gruplama Alanı (Strategy Zone) - GÜNCELLENDİ */
+        /* Özel Gruplama Alanı (Strategy Zone) - MAVİ TASARIM */
         .strategy-zone {
-            border: 2px dashed rgba(47, 129, 247, 0.5); /* Çerçeve rengi maviye döndü */
+            border: 2px dashed rgba(47, 129, 247, 0.5); 
             border-radius: 16px;
             padding: 20px;
-            /* İsteğin üzerine eklenen soluk mavi arka plan fonu */
             background-color: rgba(47, 129, 247, 0.15); 
             margin-bottom: 30px;
             position: relative;
@@ -37,7 +36,7 @@
             color: var(--accent-cyan);
             font-weight: bold;
             font-size: 0.9rem;
-            border: 1px solid var(--accent-cyan); /* Başlık çerçevesi de mavi oldu */
+            border: 1px solid var(--accent-cyan);
             border-radius: 20px;
         }
 
@@ -91,7 +90,12 @@
                         
                         <div class="col-12" style="height: 50%;">
                             <div class="card-figma">
-                                <h5><span class="badge bg-info text-dark me-2">ADIM 2</span> İşgücü Bütçeleme</h5>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h5 class="mb-0"><span class="badge bg-info text-dark me-2">ADIM 2</span> İşgücü Bütçeleme</h5>
+                                    <button class="btn btn-sm btn-outline-secondary text-secondary border-0" data-bs-toggle="modal" data-bs-target="#parametreModal" title="Maliyet ve Altyapı Ayarları">
+                                        <i class="fa-solid fa-gear"></i>
+                                    </button>
+                                </div>
                                 <p class="desc">Büyüme hedefine göre: Yeni eleman mı, fazla mesai mi?</p>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="flex-grow-1">
@@ -189,11 +193,98 @@
                 </div>
             </div>
 
-        </div> <footer class="mt-5 text-center text-muted small">
+        </div> <div class="card-figma mt-4 border-warning border-opacity-25" style="background: rgba(255, 193, 7, 0.05);">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="text-warning mb-0"><i class="fa-solid fa-gamepad me-2"></i>Canlı Operasyon Simülatörü</h5>
+                <button class="btn btn-warning btn-sm text-dark fw-bold" onclick="yeniSiparisYarat()">
+                    <i class="fa-solid fa-plus me-1"></i> Rastgele Sipariş Gir
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-dark table-hover table-sm small align-middle mb-0" style="background: transparent;">
+                    <thead>
+                        <tr class="text-secondary">
+                            <th>ID</th>
+                            <th>Müşteri</th>
+                            <th>Saat</th>
+                            <th>Tutar</th>
+                            <th>Durum</th>
+                            <th class="text-end">Aksiyon</th>
+                        </tr>
+                    </thead>
+                    <tbody id="siparisListesiBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <footer class="mt-5 text-center text-muted small">
             <p>&copy; 2025 Sentinel DSS v2.0 • Taktiksel Yönetim Sürümü</p>
         </footer>
 
     </div>
+
+    <div class="modal fade" id="parametreModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border border-secondary text-white shadow-lg">
+          
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title text-info"><i class="fa-solid fa-sliders me-2"></i>Sistem Parametreleri</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+          </div>
+          
+          <div class="modal-body">
+            <div class="alert alert-secondary d-flex align-items-center p-2 small mb-3">
+                <i class="fa-solid fa-circle-info me-2"></i>
+                <div>Bu ayarlar veritabanına kaydedilir ve hesaplamaları anında etkiler.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-light fw-bold">1 Personel Aylık Maliyeti (TL)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fa-solid fa-user-tag"></i></span>
+                    <input type="number" class="form-control bg-dark text-white border-secondary" id="inputPersonelMaliyeti" placeholder="Örn: 30000">
+                </div>
+                <div class="form-text text-muted small">Maaş + SGK + Yemek + Yol dahil toplam maliyet.</div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-light fw-bold">Sipariş Başına Mesai Maliyeti (TL)</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fa-solid fa-clock"></i></span>
+                    <input type="number" class="form-control bg-dark text-white border-secondary" id="inputMesaiUcreti" placeholder="Örn: 50">
+                </div>
+                <div class="form-text text-muted small">Paketleme başına operasyonel dış kaynak maliyeti.</div>
+            </div>
+
+            <div class="mb-2">
+                <label class="form-label text-light fw-bold">Mevcut IT Altyapı Paketi</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fa-solid fa-server"></i></span>
+                    <select class="form-select bg-dark text-white border-secondary" id="inputSunucuKapasitesi">
+                        <option value="2000">1. Başlangıç Paketi (Max 2.000 İşlem/Saat)</option>
+                        <option value="5000" selected>2. Standart Paket (Max 5.000 İşlem/Saat)</option>
+                        <option value="15000">3. Pro Paket (Max 15.000 İşlem/Saat)</option>
+                        <option value="50000">4. Enterprise Cluster (Max 50.000+ İşlem/Saat)</option>
+                    </select>
+                </div>
+                <div class="form-text text-muted small">Şirketin şu an kullandığı sunucu/cloud paketini seçiniz.</div>
+            </div>
+
+          </div>
+          
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">İptal</button>
+            <button type="button" class="btn btn-info btn-sm fw-bold" onclick="parametreleriKaydet()">
+                <i class="fa-solid fa-floppy-disk me-1"></i> Değişiklikleri Kaydet
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/script.js"></script>
 </body>

@@ -1,58 +1,102 @@
 const db = require('../config/db');
 
+// --- HESAPLAMA FONKSİYONU ---
 exports.hesapla = (req, res) => {
-    // Girdi artık günlük sipariş değil, BÜYÜME BEKLENTİSİ (%)
-    const buyumeOrani = parseFloat(req.body.buyumeOrani); // Örn: 20 (%20)
+    const buyumeOrani = parseFloat(req.body.buyumeOrani); 
 
-    // Veritabanından mevcut aylık ortalama sipariş hacmini çekiyoruz
-    const sql = `
-        SELECT AVG(aylik_toplam) as ortalama_siparis FROM (
-            SELECT DATE_FORMAT(siparis_tarihi, '%Y-%m') as ay, COUNT(*) as aylik_toplam 
-            FROM gecmis_siparisler GROUP BY ay
-        ) as aylik_veriler
-    `;
+    // 1. Önce Parametreleri Çek (Canlı Veri)
+    const sqlParametre = `SELECT parametre_adi, deger FROM sistem_parametreleri`;
 
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json({ error: 'Veritabanı hatası' });
-        
-        // --- 6 AYLIK PROJEKSİYON ---
-        const mevcutAylikSiparis = Math.floor(results[0].ortalama_siparis);
-        
-        // Gelecek senaryosu (Kullanıcının girdiği % oranında artış)
-        const gelecekAylikSiparis = Math.floor(mevcutAylikSiparis * (1 + (buyumeOrani / 100)));
-        const siparisFarki = gelecekAylikSiparis - mevcutAylikSiparis;
-
-        // Maliyet Sabitleri (Taktiksel)
-        const personelMaliyeti = 30000; // Maaş + SGK + Yemek (Aylık)
-        const mesaiBirimMaliyet = 50;   // Sipariş başına outsource/mesai maliyeti
-
-        // Karar Analizi:
-        // A) Mevcut kadroyla devam edip artışı "Fazla Mesai / Dış Kaynak" ile çözmek
-        const maliyetMesai = siparisFarki * mesaiBirimMaliyet;
-
-        // B) Yeni personel alıp maaşa bağlamak (1 Personel ayda ort. 2000 sipariş çözer varsayalım)
-        const gerekenYeniPersonel = Math.ceil(siparisFarki / 2000); 
-        const maliyetYeniPersonel = gerekenYeniPersonel * personelMaliyeti;
-
-        let mesaj;
-        let durum;
-
-        if (siparisFarki <= 0) {
-            mesaj = `🔵 STABİL: Büyüme beklenmediği için mevcut kadro yeterli. Ekstra maliyet yok.`;
-            durum = 'primary';
-        } else if (maliyetYeniPersonel < maliyetMesai) {
-            mesaj = `🟢 ÖNERİ: <b>YENİ PERSONEL ALIN.</b> <br> %${buyumeOrani} büyüme için ${gerekenYeniPersonel} kişi almak, mesai ödemekten <b>${(maliyetMesai - maliyetYeniPersonel).toLocaleString()} TL</b> daha kârlı.`;
-            durum = 'success';
-        } else {
-            mesaj = `🟡 ÖNERİ: <b>FAZLA MESAİ / OUTSOURCE.</b> <br> Büyüme hacmi için personel almak maliyetli. Mesai ile çözmek <b>${(maliyetYeniPersonel - maliyetMesai).toLocaleString()} TL</b> tasarruf sağlar.`;
-            durum = 'warning';
+    db.query(sqlParametre, (err, paramResults) => {
+        if (err) {
+            console.error("Parametre Hatası:", err);
+            return res.status(500).json({ error: 'Parametre okuma hatası' });
         }
 
-        res.json({
-            mevcut: mevcutAylikSiparis,
-            gelecek: gelecekAylikSiparis,
-            mesaj: mesaj,
-            durum: durum
+        // Gelen veriyi { anahtar: deger } formatına çevir
+        const parametreler = {};
+        paramResults.forEach(row => {
+            parametreler[row.parametre_adi] = parseFloat(row.deger);
         });
+
+        // 2. Sipariş Verilerini Çek
+        const sqlSiparis = `
+            SELECT AVG(aylik_toplam) as ortalama_siparis FROM (
+                SELECT DATE_FORMAT(siparis_tarihi, '%Y-%m') as ay, COUNT(*) as aylik_toplam 
+                FROM gecmis_siparisler GROUP BY ay
+            ) as aylik_veriler
+        `;
+
+        db.query(sqlSiparis, (err, siparisResults) => {
+            if (err) return res.status(500).json({ error: 'Veritabanı hatası' });
+            
+            const mevcutAylikSiparis = Math.floor(siparisResults[0].ortalama_siparis);
+            
+            // Gelecek Senaryosu
+            const gelecekAylikSiparis = Math.floor(mevcutAylikSiparis * (1 + (buyumeOrani / 100)));
+            const siparisFarki = gelecekAylikSiparis - mevcutAylikSiparis;
+
+            // --- DİNAMİK DEĞERLER KULLANILIYOR ---
+            const personelMaliyeti = parametreler['personel_maaliyet_aylik']; 
+            const mesaiBirimMaliyet = parametreler['mesai_birim_ucret'];   
+
+            // Karar Analizi
+            const maliyetMesai = siparisFarki * mesaiBirimMaliyet;
+            const gerekenYeniPersonel = Math.ceil(siparisFarki / 2000); // 1 personel = 2000 sipariş kapasitesi
+            const maliyetYeniPersonel = gerekenYeniPersonel * personelMaliyeti;
+
+            let mesaj;
+            let durum;
+
+            if (siparisFarki <= 0) {
+                mesaj = `🔵 STABİL: Büyüme beklenmediği için mevcut kadro yeterli.`;
+                durum = 'primary';
+            } else if (maliyetYeniPersonel < maliyetMesai) {
+                // Yeni personel daha ucuzsa
+                const fark = maliyetMesai - maliyetYeniPersonel;
+                mesaj = `🟢 ÖNERİ: <b>YENİ PERSONEL ALIN.</b><br>
+                         %${buyumeOrani} büyüme için ${gerekenYeniPersonel} kişi almak, mesai ödemekten <b>${fark.toLocaleString()} TL</b> daha kârlı.<br>
+                         <small class="text-white-50">(Parametreler: Maaş ${personelMaliyeti.toLocaleString()} TL, Mesai ${mesaiBirimMaliyet} TL)</small>`;
+                durum = 'success';
+            } else {
+                // Mesai daha ucuzsa
+                const fark = maliyetYeniPersonel - maliyetMesai;
+                mesaj = `🟡 ÖNERİ: <b>FAZLA MESAİ / OUTSOURCE.</b><br>
+                         Yeni personel almak yerine mesai yaptırmak <b>${fark.toLocaleString()} TL</b> tasarruf sağlar.<br>
+                         <small class="text-white-50">(Parametreler: Maaş ${personelMaliyeti.toLocaleString()} TL, Mesai ${mesaiBirimMaliyet} TL)</small>`;
+                durum = 'warning';
+            }
+
+            res.json({
+                mevcut: mevcutAylikSiparis,
+                gelecek: gelecekAylikSiparis,
+                mesaj: mesaj,
+                durum: durum
+            });
+        });
+    });
+};
+
+// --- GÜNCELLEME FONKSİYONU (YENİ HALİ - Sunucu Kapasitesi Dahil) ---
+exports.parametreGuncelle = (req, res) => {
+    // Frontend'den gelen 3 değeri alıyoruz
+    const { personelMaliyeti, mesaiUcreti, sunucuKapasitesi } = req.body;
+
+    const sql = `
+        UPDATE sistem_parametreleri 
+        SET deger = CASE 
+            WHEN parametre_adi = 'personel_maaliyet_aylik' THEN ? 
+            WHEN parametre_adi = 'mesai_birim_ucret' THEN ? 
+            WHEN parametre_adi = 'sunucu_anlik_kapasite' THEN ? 
+        END
+        WHERE parametre_adi IN ('personel_maaliyet_aylik', 'mesai_birim_ucret', 'sunucu_anlik_kapasite')
+    `;
+
+    db.query(sql, [personelMaliyeti, mesaiUcreti, sunucuKapasitesi], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.json({ success: false, message: 'Veritabanı güncelleme hatası' });
+        }
+        res.json({ success: true, message: 'Parametreler başarıyla güncellendi!' });
     });
 };
