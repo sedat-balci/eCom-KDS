@@ -1,9 +1,10 @@
 const db = require('../config/db');
 
 exports.hesapla = (req, res) => {
-    const beklenenKullanici = parseInt(req.body.beklenenKullanici);
+    // Girdi artık anlık kullanıcı değil, YILLIK BÜYÜME HEDEFİ (%)
+    const buyumeOrani = parseFloat(req.body.buyumeOrani); // Örn: 50 (%50)
     
-    // Geçmişteki en yoğun saati bul (Peak Time)
+    // Geçmişteki en yoğun anı (Peak) buluyoruz
     const sql = `
         SELECT COUNT(*) as siparis_sayisi 
         FROM gecmis_siparisler 
@@ -13,33 +14,31 @@ exports.hesapla = (req, res) => {
     `;
 
     db.query(sql, (err, results) => {
-        if (err) {
-            console.error('Veritabanı Hatası:', err);
-            return res.json({ error: 'Veritabanı hatası' });
-        }
+        if (err) return res.json({ error: 'Veritabanı hatası' });
         
-        const maxSiparisSaatte = results[0] ? results[0].siparis_sayisi : 100;
+        const mevcutPeakLoad = results[0] ? results[0].siparis_sayisi : 100;
         
-        // Mantık: Her sipariş ortalama 50 sayfa görüntüleme (request) yaratsın.
-        const maxRequestDakika = Math.floor((maxSiparisSaatte * 50) / 60);
+        // Gelecek Senaryosu
+        const gelecekPeakLoad = Math.floor(mevcutPeakLoad * (1 + (buyumeOrani / 100)));
         
-        // Sunucu Kapasitesi (Statik varsayım)
-        const sunucuKapasitesi = 5000; // Dakikada 5000 istek kaldırır
+        // Sunucu Paketleri (Statik Kapasiteler)
+        const kapasiteStandard = 150; // Standart Paket Limiti
+        const kapasitePro = 300;      // Pro Paket Limiti
         
-        const tahminiYuk = beklenenKullanici * 10; // Her kullanıcı 10 istek yapsa
-        const dolulukOrani = (tahminiYuk / sunucuKapasitesi) * 100;
+        // Doluluk Oranı
+        const dolulukOrani = (gelecekPeakLoad / kapasiteStandard) * 100;
 
         let mesaj;
-        if (dolulukOrani > 100) {
-            mesaj = `🔴 ÇÖKME RİSKİ: Sunucu kapasitesi %${dolulukOrani.toFixed(0)} oranında aşılacak!`;
-        } else if (dolulukOrani > 80) {
-            mesaj = `🟡 RİSKLİ: Sunucu %${dolulukOrani.toFixed(0)} yük altında zorlanacak.`;
+        if (gelecekPeakLoad > kapasitePro) {
+            mesaj = `🔴 KRİTİK YATIRIM: %${buyumeOrani} büyüme ile <b>Enterprise Cloud</b> mimarisine geçiş şart! Mevcut altyapı bu yükü taşıyamaz.`;
+        } else if (gelecekPeakLoad > kapasiteStandard) {
+            mesaj = `🟡 UPGRADE GEREKLİ: Standart paket yetersiz kalacak (%${dolulukOrani.toFixed(0)}). <b>Pro Pakete</b> geçiş planlanmalı.`;
         } else {
-            mesaj = `🟢 GÜVENLİ: Sistem yükü %${dolulukOrani.toFixed(0)} seviyesinde stabil kalır.`;
+            mesaj = `🟢 YATIRIM GEREKSİZ: Mevcut altyapı %${buyumeOrani} büyümeyi rahatlıkla karşılar. (%${dolulukOrani.toFixed(0)} Doluluk).`;
         }
 
         res.json({
-            dolulukOrani: Math.min(dolulukOrani, 100),
+            dolulukOrani: Math.min(dolulukOrani, 100), // Grafik 100'ü geçmesin
             mesaj
         });
     });

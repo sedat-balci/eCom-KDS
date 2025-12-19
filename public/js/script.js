@@ -10,11 +10,9 @@ const commonOptions = {
 
 let chartPersonel, chartLojistik, chartRoi, chartTrend, chartIade, chartSunucu;
 
-// --- INIT FONKSİYONLARI ---
-
+// --- INIT FONKSİYONLARI --- (DEĞİŞMEDİ)
 function initPersonelChart(mevcut, hedef) {
-    const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'bar' }, series: [{ name: 'Kapasite', data: [mevcut, hedef] }], plotOptions: { bar: { horizontal: true, borderRadius: 4, distributed: true } }, xaxis: { categories: ['Mevcut', 'Hedef'] }, colors: ['#00bcd4', '#F73D93'] };
-    chartPersonel = new ApexCharts(document.querySelector("#personel-chart"), options); chartPersonel.render();
+    // Personel grafiği artık kullanılmıyor, sonuç metin olarak dönüyor. Bu fonksiyonu kaldırabiliriz veya boş bırakabiliriz.
 }
 function initLojistikChart(mevcut, yeni) {
     const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'donut' }, series: [mevcut, yeni], labels: ['Mevcut', 'Simüle'], colors: ['#FFC107', '#00bcd4'], plotOptions: { pie: { donut: { size: '65%' } } }, legend: { position: 'bottom' } };
@@ -33,42 +31,56 @@ function initIadeChart() {
     const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'bar', height: 200 }, series: [{ name: 'Tutar', data: [0, 0, 0] }], xaxis: { categories: ['Tasarruf', 'Kayıp', 'NET'] }, colors: ['#00E396', '#FF4560', '#2f81f7'], plotOptions: { bar: { distributed: true, borderRadius: 4 } } };
     chartIade = new ApexCharts(document.querySelector("#iade-chart"), options); chartIade.render();
 }
-
-// YENİ: SUNUCU GAUGE CHART
 function initSunucuChart() {
     const options = {
         series: [0],
-        chart: { type: 'radialBar', height: 200, foreColor: '#c9d1d9' },
+        chart: { type: 'radialBar', height: 120, foreColor: '#c9d1d9', sparkline: { enabled: true } }, // Sparkline ile küçülttük
         plotOptions: {
             radialBar: {
-                startAngle: -135, endAngle: 135,
-                hollow: { size: '70%' },
+                startAngle: -90, endAngle: 90,
+                hollow: { size: '60%' },
                 track: { background: '#30363d' },
                 dataLabels: {
-                    value: { fontSize: '22px', color: '#fff', formatter: val => val + "%" },
-                    name: { show: true, label: 'Yük', color: '#8b949e' }
+                    value: { fontSize: '14px', color: '#fff', offsetY: -10, formatter: val => val + "%" },
+                    name: { show: false }
                 }
             }
         },
-        fill: {
-            type: 'gradient',
-            gradient: { shade: 'dark', type: 'horizontal', gradientToColors: ['#FF4560'], stops: [0, 100] }
-        },
-        stroke: { lineCap: 'round' },
-        colors: ['#00E396'] // Yeşilden Kırmızıya
+        fill: { type: 'gradient', gradient: { shade: 'dark', type: 'horizontal', gradientToColors: ['#FF4560'], stops: [0, 100] } },
+        stroke: { lineCap: 'round' }, colors: ['#00E396']
     };
     chartSunucu = new ApexCharts(document.querySelector("#sunucu-chart"), options);
     chartSunucu.render();
 }
 
-// --- SİMÜLASYON FONKSİYONLARI ---
+// --- SİMÜLASYON FONKSİYONLARI --- (GÜNCELLENDİ)
 
+// GÜNCELLENDİ: Personel artık büyüme oranı alıyor
 async function runPersonelSim() {
-    const res = await fetch('/api/personel', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ hedefSiparis: document.getElementById('hedefSiparis').value, yeniPersonel: document.getElementById('yeniPersonel').value }) });
+    const buyumeOrani = document.getElementById('buyumeOraniPersonel').value;
+    const res = await fetch('/api/personel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buyumeOrani })
+    });
     const data = await res.json();
-    chartPersonel.updateSeries([{ data: [data.mevcutKapasite, data.hedefKapasite] }]);
     showResult('personel-result', data.mesaj);
 }
+
+// GÜNCELLENDİ: Sunucu artık büyüme oranı alıyor
+async function runSunucuSim() {
+    const buyumeOrani = document.getElementById('buyumeOraniSunucu').value;
+    const res = await fetch('/api/sunucu', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ buyumeOrani })
+    });
+    const data = await res.json();
+    chartSunucu.updateSeries([data.dolulukOrani]);
+    showResult('sunucu-result', data.mesaj);
+}
+
+// DİĞERLERİ AYNI KALDI
 async function runLojistikSim() {
     const res = await fetch('/api/lojistik', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ hedefKargoHizi: document.getElementById('hedefKargoHizi').value }) });
     const data = await res.json();
@@ -82,7 +94,7 @@ async function runDepoSim() {
     showResult('depo-result', data.mesaj);
 }
 async function runTrendSim() {
-    document.getElementById('trend-result').style.display = 'block'; document.getElementById('trend-result').innerText = '⏳ Hesaplamalar yapılıyor...';
+    document.getElementById('trend-result').style.display = 'block'; document.getElementById('trend-result').innerText = '⏳ Hesaplanıyor...';
     const res = await fetch('/api/depo-trend', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ depoKapasitesi: document.getElementById('depoKapasitesi').value }) });
     const data = await res.json();
     chartTrend.updateOptions({ xaxis: { categories: data.labels } });
@@ -95,16 +107,6 @@ async function runIadeSim() {
     chartIade.updateSeries([{ data: [Math.floor(data.tasarruf), Math.floor(-data.zarar), Math.floor(data.netEtki)] }]);
     showResult('iade-result', data.mesaj);
 }
-
-// YENİ: SUNUCU SİMÜLASYONU
-async function runSunucuSim() {
-    const res = await fetch('/api/sunucu', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ beklenenKullanici: document.getElementById('beklenenKullanici').value }) });
-    const data = await res.json();
-    chartSunucu.updateSeries([data.dolulukOrani]);
-    showResult('sunucu-result', data.mesaj);
-}
-
-// YENİ: MALİYET SİMÜLASYONU
 async function runMaliyetSim() {
     const res = await fetch('/api/maliyet', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ tasarrufBirim: document.getElementById('tasarrufBirim').value }) });
     const data = await res.json();
@@ -112,15 +114,13 @@ async function runMaliyetSim() {
     showResult('maliyet-result', data.mesaj);
 }
 
-// Yardımcı: Sonuç Gösterme
 function showResult(elementId, msg) {
     const el = document.getElementById(elementId);
     el.style.display = 'block';
     el.innerHTML = msg;
-    el.className = 'result-box text-white mt-2 ' + (msg.includes('🟢') || msg.includes('GÜVENLİ') ? 'bg-success bg-opacity-25 border border-success' : 'bg-danger bg-opacity-25 border border-danger');
+    el.className = 'result-box text-white mt-2 ' + (msg.includes('🟢') || msg.includes('GÜVENLİ') ? 'bg-success bg-opacity-25 border border-success' : (msg.includes('🔵') ? 'bg-primary bg-opacity-25 border border-primary' : (msg.includes('🟡') ? 'bg-warning bg-opacity-25 border border-warning' : 'bg-danger bg-opacity-25 border border-danger')));
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    initPersonelChart(350, 400); initLojistikChart(5, 5); initRoiChart(100000, 44000); initTrendChart(); initIadeChart();
-    initSunucuChart(); // Yeni
+    initLojistikChart(5, 5); initRoiChart(100000, 44000); initTrendChart(); initIadeChart(); initSunucuChart();
 });

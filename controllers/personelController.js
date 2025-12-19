@@ -1,45 +1,58 @@
 const db = require('../config/db');
 
 exports.hesapla = (req, res) => {
-    const hedefSiparis = parseInt(req.body.hedefSiparis);
-    const yeniPersonelFarki = parseInt(req.body.yeniPersonel); 
+    // Girdi artık günlük sipariş değil, BÜYÜME BEKLENTİSİ (%)
+    const buyumeOrani = parseFloat(req.body.buyumeOrani); // Örn: 20 (%20)
 
-    const sqlKapasite = `
-        SELECT COUNT(id) AS mevcut_personel 
-        FROM personel WHERE rol = 'Paketleyici'
+    // Veritabanından mevcut aylık ortalama sipariş hacmini çekiyoruz
+    const sql = `
+        SELECT AVG(aylik_toplam) as ortalama_siparis FROM (
+            SELECT DATE_FORMAT(siparis_tarihi, '%Y-%m') as ay, COUNT(*) as aylik_toplam 
+            FROM gecmis_siparisler GROUP BY ay
+        ) as aylik_veriler
     `;
 
-    db.query(sqlKapasite, (err, results) => {
-        if (err) {
-            console.error('Veritabanı Hatası:', err);
-            return res.status(500).json({ error: 'Veritabanı hatası' });
-        }
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: 'Veritabanı hatası' });
         
-        // Hesaplama Mantığı
-        const ortalamaSure = 12; // dk
-        const GUNLUK_CALISMA_DK = 8 * 60; 
+        // --- 6 AYLIK PROJEKSİYON ---
+        const mevcutAylikSiparis = Math.floor(results[0].ortalama_siparis);
+        
+        // Gelecek senaryosu (Kullanıcının girdiği % oranında artış)
+        const gelecekAylikSiparis = Math.floor(mevcutAylikSiparis * (1 + (buyumeOrani / 100)));
+        const siparisFarki = gelecekAylikSiparis - mevcutAylikSiparis;
 
-        const mevcutPersonel = results[0].mevcut_personel || 2;
-        const mevcutKapasite = Math.floor(mevcutPersonel * GUNLUK_CALISMA_DK / ortalamaSure);
-        
-        const yeniPersonelSayisi = mevcutPersonel + yeniPersonelFarki;
-        const yeniKapasiteAdet = Math.floor(yeniPersonelSayisi * GUNLUK_CALISMA_DK / ortalamaSure);
+        // Maliyet Sabitleri (Taktiksel)
+        const personelMaliyeti = 30000; // Maaş + SGK + Yemek (Aylık)
+        const mesaiBirimMaliyet = 50;   // Sipariş başına outsource/mesai maliyeti
 
-        let sonuc_mesaj;
-        
-        if (yeniKapasiteAdet < hedefSiparis) {
-            const acik = hedefSiparis - yeniKapasiteAdet;
-            sonuc_mesaj = `🔴 RİSK: ${acik} adet sipariş kapasite dışı kalıyor.`;
+        // Karar Analizi:
+        // A) Mevcut kadroyla devam edip artışı "Fazla Mesai / Dış Kaynak" ile çözmek
+        const maliyetMesai = siparisFarki * mesaiBirimMaliyet;
+
+        // B) Yeni personel alıp maaşa bağlamak (1 Personel ayda ort. 2000 sipariş çözer varsayalım)
+        const gerekenYeniPersonel = Math.ceil(siparisFarki / 2000); 
+        const maliyetYeniPersonel = gerekenYeniPersonel * personelMaliyeti;
+
+        let mesaj;
+        let durum;
+
+        if (siparisFarki <= 0) {
+            mesaj = `🔵 STABİL: Büyüme beklenmediği için mevcut kadro yeterli. Ekstra maliyet yok.`;
+            durum = 'primary';
+        } else if (maliyetYeniPersonel < maliyetMesai) {
+            mesaj = `🟢 ÖNERİ: <b>YENİ PERSONEL ALIN.</b> <br> %${buyumeOrani} büyüme için ${gerekenYeniPersonel} kişi almak, mesai ödemekten <b>${(maliyetMesai - maliyetYeniPersonel).toLocaleString()} TL</b> daha kârlı.`;
+            durum = 'success';
         } else {
-            const fazla = yeniKapasiteAdet - hedefSiparis;
-            sonuc_mesaj = `🟢 UYGUN: Kapasite yeterli. (${fazla} adet rezerv)`;
+            mesaj = `🟡 ÖNERİ: <b>FAZLA MESAİ / OUTSOURCE.</b> <br> Büyüme hacmi için personel almak maliyetli. Mesai ile çözmek <b>${(maliyetYeniPersonel - maliyetMesai).toLocaleString()} TL</b> tasarruf sağlar.`;
+            durum = 'warning';
         }
 
-        // JSON Cevabı
         res.json({
-            mevcutKapasite,
-            hedefKapasite: yeniKapasiteAdet,
-            mesaj: sonuc_mesaj
+            mevcut: mevcutAylikSiparis,
+            gelecek: gelecekAylikSiparis,
+            mesaj: mesaj,
+            durum: durum
         });
     });
 };
