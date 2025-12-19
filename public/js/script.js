@@ -19,13 +19,92 @@ function initLojistikChart(mevcut, yeni) {
     chartLojistik = new ApexCharts(document.querySelector("#lojistik-chart"), options); chartLojistik.render();
 }
 
+// --- ROI GRAFİĞİNİ BAŞLAT (GÜNCELLENMİŞ PROFESYONEL VERSİYON) ---
 function initRoiChart(yatirim, ekKar) {
-    // ÖNCE TEMİZLİK
+    // 1. ÖNCE TEMİZLİK (Dublörleşmeyi önler)
     document.querySelector("#roi-chart").innerHTML = "";
 
-    const data = []; for(let i=0; i<=12; i++) data.push(Math.max(0, yatirim - (ekKar * i)));
-    const options = { ...commonOptions, chart: { ...commonOptions.chart, type: 'area' }, series: [{ name: 'Kalan Borç', data }], stroke: { curve: 'smooth' }, colors: ['#00E396'], fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } } };
-    chartRoi = new ApexCharts(document.querySelector("#roi-chart"), options); chartRoi.render();
+    // 2. Veri ve Etiketleri Hazırla
+    const data = [];
+    const labels = [];
+    
+    // 12 aylık projeksiyon + Başlangıç anı (Toplam 13 nokta)
+    for(let i=0; i<=12; i++) {
+        // Veri: Kalan borç (Sıfırın altına düşemez)
+        data.push(Math.max(0, yatirim - (ekKar * i)));
+        
+        // Etiket: 0. an "Başlangıç", diğerleri "X. Ay"
+        if(i === 0) {
+            labels.push('Başlangıç');
+        } else {
+            labels.push(i + '. Ay');
+        }
+    }
+
+    // 3. Grafik Ayarları
+    const options = {
+        ...commonOptions,
+        chart: { 
+            ...commonOptions.chart, 
+            type: 'area',
+            // KDS için önemli: Zoom'u kapatalım ki kafa karışmasın
+            toolbar: { show: false }
+        },
+        series: [{ 
+            name: 'Kalan Maliyet', 
+            data: data 
+        }],
+        stroke: { curve: 'smooth', width: 3 },
+        colors: ['#00E396'], // Başarı/Kâr rengi (Yeşil)
+        fill: { 
+            type: 'gradient', 
+            gradient: { opacityFrom: 0.6, opacityTo: 0.1 } 
+        },
+        
+        // --- X EKSENİ AYARLARI (ZAMAN) ---
+        xaxis: {
+            categories: labels, // Hazırladığımız "Ay" etiketleri
+            labels: {
+                style: { colors: '#8b949e', fontSize: '11px' },
+                rotate: -45, // Etiketler sığsın diye hafif döndür
+                trim: true
+            },
+            tooltip: { enabled: false } // X ekseni ipucunu kapat
+        },
+        
+        // --- Y EKSENİ AYARLARI (PARA) ---
+        yaxis: {
+            // Eksen Başlığı (Jüri için önemli detay)
+            title: {
+                text: 'Kalan Yatırım Tutarı (TL)',
+                style: { color: '#c9d1d9', fontSize: '12px', fontWeight: 500 }
+            },
+            // Sayıların Formatı (Sonuna ₺ ekle ve binlik ayraç koy)
+            labels: {
+                formatter: function (val) {
+                    return val.toLocaleString('tr-TR', { maximumFractionDigits: 0 }) + ' ₺';
+                },
+                style: { colors: '#8b949e' }
+            }
+        },
+
+        // Mouse üzerine gelince çıkan kutu
+        tooltip: {
+            theme: 'dark',
+            y: {
+               formatter: function (val) {
+                   // Tooltip içinde de net para formatı
+                   return val.toLocaleString('tr-TR') + " TL";
+               }
+            }
+        },
+        dataLabels: { enabled: false }
+    };
+
+    // 4. Çiz
+    chartRoi = new ApexCharts(document.querySelector("#roi-chart"), options);
+    chartRoi.render();
+
 }
 
 function initTrendChart() {

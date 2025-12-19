@@ -137,11 +137,24 @@
                 <div class="card-figma">
                     <h5><i class="fa-solid fa-warehouse text-success"></i> Depo Yatırım ROI</h5>
                     <p class="desc">Yatırımın geri dönüş süresi.</p>
+                    
                     <div id="roi-chart" class="mb-2"></div>
+                    
                     <div class="mt-auto">
-                        <input type="number" class="form-control form-control-sm mb-2" id="yatirimMaliyeti" value="100000" placeholder="Yatırım TL">
-                        <input type="number" class="form-control form-control-sm" id="ekKapasite" value="50" placeholder="Ek Sipariş/Gün">
-                        <button class="btn btn-figma" onclick="runDepoSim()">Analiz Et</button>
+                        <div class="mb-2">
+                            <label class="form-label small text-light fw-bold mb-1">Planlanan Yatırım (TL)</label>
+                            <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="yatirimMaliyeti" value="100000">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-light fw-bold mb-1">Hedef Kapasite Artışı (Adet/Gün)</label>
+                            <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="ekKapasite" value="50">
+                            <div class="form-text text-secondary" style="font-size: 0.7rem;">
+                                <i class="fa-solid fa-circle-info me-1"></i>Makinenin vaat ettiği günlük ek üretim.
+                            </div>
+                        </div>
+
+                        <button class="btn btn-figma w-100" onclick="runDepoSim()">Analiz Et</button>
                         <div id="depo-result" class="result-box bg-dark border border-secondary text-white"></div>
                     </div>
                 </div>
@@ -193,29 +206,34 @@
                 </div>
             </div>
 
-        </div> <div class="card-figma mt-4 border-warning border-opacity-25" style="background: rgba(255, 193, 7, 0.05);">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="text-warning mb-0"><i class="fa-solid fa-gamepad me-2"></i>Canlı Operasyon Simülatörü</h5>
-                <button class="btn btn-warning btn-sm text-dark fw-bold" onclick="yeniSiparisYarat()">
-                    <i class="fa-solid fa-plus me-1"></i> Rastgele Sipariş Gir
-                </button>
-            </div>
-            
-            <div class="table-responsive">
-                <table class="table table-dark table-hover table-sm small align-middle mb-0" style="background: transparent;">
-                    <thead>
-                        <tr class="text-secondary">
-                            <th>ID</th>
-                            <th>Müşteri</th>
-                            <th>Saat</th>
-                            <th>Tutar</th>
-                            <th>Durum</th>
-                            <th class="text-end">Aksiyon</th>
-                        </tr>
-                    </thead>
-                    <tbody id="siparisListesiBody">
-                        </tbody>
-                </table>
+        </div> 
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card-figma border-warning border-opacity-25" style="background: rgba(255, 193, 7, 0.05);">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-warning mb-0"><i class="fa-solid fa-gamepad me-2"></i>Canlı Operasyon Simülatörü</h5>
+                        <button class="btn btn-warning btn-sm text-dark fw-bold" onclick="yeniSiparisYarat()">
+                            <i class="fa-solid fa-plus me-1"></i> Rastgele Sipariş Gir
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover table-sm small align-middle mb-0" style="background: transparent;">
+                            <thead>
+                                <tr class="text-secondary">
+                                    <th>ID</th>
+                                    <th>Müşteri</th>
+                                    <th>Saat</th>
+                                    <th>Tutar</th>
+                                    <th>Durum</th>
+                                    <th class="text-end">Aksiyon</th>
+                                </tr>
+                            </thead>
+                            <tbody id="siparisListesiBody">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
 
