@@ -1,66 +1,90 @@
 const db = require('../config/db');
 
 exports.hesapla = (req, res) => {
-    const depoKapasitesi = parseInt(req.body.depoKapasitesi); 
-    
-    // Geçmiş veriyi çek
-    const sql = `
-        SELECT 
-            DATE_FORMAT(siparis_tarihi, '%Y-%m') as ay, 
-            SUM(adet) as toplam_satis 
-        FROM gecmis_siparisler 
-        GROUP BY ay 
-        ORDER BY ay ASC
-    `;
-
-    db.query(sql, (err, results) => {
-        if (err || !results || results.length < 2) {
-            return res.json({ labels: [], data: [], forecast: [], mesaj: "Yetersiz veri." });
-        }
-
-        // Lineer Regresyon Hesaplaması
-        const n = results.length;
-        let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+    try {
+        const depoKapasitesi = parseInt(req.body.depoKapasitesi) || 0; 
         
-        const historicalData = results.map((row, i) => {
-            const y = parseInt(row.toplam_satis);
-            sumX += i; 
-            sumY += y; 
-            sumXY += (i * y); 
-            sumXX += (i * i);
-            return y;
-        });
+        const sql = `
+            SELECT 
+                DATE_FORMAT(siparis_tarihi, '%Y-%m') as ay, 
+                SUM(adet) as toplam_satis 
+            FROM gecmis_siparisler 
+            GROUP BY ay 
+            ORDER BY ay ASC
+        `;
 
-        const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
-        const intercept = (sumY - slope * sumX) / n;
-        
-        const labels = results.map(r => r.ay); 
-        const forecastData = []; 
-        let patlamaayi = null;
-
-        // Gelecek 6 ayın tahmini
-        for (let i = 1; i <= 6; i++) {
-            const prediction = Math.floor(slope * (n + i) + intercept);
-            labels.push(`+${i} Ay`);
-            forecastData.push(prediction);
-            if (!patlamaayi && prediction > depoKapasitesi) {
-                patlamaayi = `+${i}. Ay`;
+        db.query(sql, (err, results) => {
+            // Veritabanı hatası veya boş veri kontrolü
+            if (err) {
+                console.error("DB Hatası:", err);
+                return res.status(500).json({ mesaj: "Veritabanı hatası oluştu." });
             }
-        }
+            if (!results || results.length < 2) {
+                return res.json({ labels: [], data: [], forecast: [], mesaj: "Analiz için yeterli veri yok." });
+            }
 
-        let mesaj;
-        if (patlamaayi) {
-            mesaj = `🔴 KRİTİK: Depo **${patlamaayi}** sonra doluyor!`;
-        } else {
-            mesaj = `🟢 GÜVENLİ: Kapasite yeterli.`;
-        }
+            // --- Regresyon Mantığı ---
+            const n = results.length;
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            
+            const historicalData = results.map((row, i) => {
+                const y = parseInt(row.toplam_satis) || 0;
+                sumX += i; sumY += y; sumXY += (i * y); sumXX += (i * i);
+                return y;
+            });
 
-        res.json({
-            labels,
-            historical: historicalData,
-            forecast: new Array(n).fill(null).concat(forecastData),
-            capacity: depoKapasitesi,
-            mesaj
+            const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            
+            const labels = results.map(r => r.ay); 
+            const forecastData = []; 
+            let patlamaayi = null;
+
+            // Gelecek 6 ayın tahmini
+            for (let i = 1; i <= 6; i++) {
+                const prediction = Math.floor(slope * (n + i) + intercept);
+                labels.push(`+${i} Ay`);
+                forecastData.push(prediction);
+                if (!patlamaayi && prediction > depoKapasitesi) {
+                    patlamaayi = `+${i}. Ay`;
+                }
+            }
+
+            // --- GÜVENLİ BÜYÜME ORANI HESABI ---
+            const sonGerceklesen = historicalData[historicalData.length - 1];
+            const sonTahmin = forecastData[forecastData.length - 1];
+            
+            let buyumeYuzdesi = 0;
+
+            // Sıfıra bölme hatasını engellemek için kontrol
+            if (sonGerceklesen > 0) {
+                buyumeYuzdesi = ((sonTahmin - sonGerceklesen) / sonGerceklesen) * 100;
+            }
+
+            // NaN veya Infinity kontrolü
+            if (!isFinite(buyumeYuzdesi)) {
+                buyumeYuzdesi = 0;
+            }
+
+            let mesaj;
+            if (patlamaayi) {
+                mesaj = `🔴 KRİTİK: Trend <b>%${buyumeYuzdesi.toFixed(1)} artış</b> gösteriyor! Depo <b>${patlamaayi}</b> sonra doluyor.`;
+            } else {
+                mesaj = `🟢 GÜVENLİ: Büyüme oranı <b>%${buyumeYuzdesi.toFixed(1)}</b> seviyesinde. Kapasite yeterli.`;
+            }
+
+            // Başarılı yanıt gönder
+            res.json({
+                labels,
+                historical: historicalData,
+                forecast: new Array(n).fill(null).concat(forecastData),
+                capacity: depoKapasitesi,
+                mesaj,
+                buyumeYuzdesi: buyumeYuzdesi.toFixed(0)
+            });
         });
-    });
+    } catch (error) {
+        console.error("Sunucu Hatası:", error);
+        res.status(500).json({ mesaj: "Sunucu tarafında işlem hatası." });
+    }
 };

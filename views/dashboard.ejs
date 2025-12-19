@@ -18,12 +18,13 @@
         .card-figma { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; height: 100%; display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: transform 0.2s; }
         .card-figma:hover { border-color: #58a6ff; }
         
-        /* Özel Gruplama Alanı (Strategy Zone) */
+        /* Özel Gruplama Alanı (Strategy Zone) - GÜNCELLENDİ */
         .strategy-zone {
-            border: 2px dashed #30363d;
+            border: 2px dashed rgba(47, 129, 247, 0.5); /* Çerçeve rengi maviye döndü */
             border-radius: 16px;
             padding: 20px;
-            background-color: rgba(22, 27, 34, 0.3);
+            /* İsteğin üzerine eklenen soluk mavi arka plan fonu */
+            background-color: rgba(47, 129, 247, 0.15); 
             margin-bottom: 30px;
             position: relative;
         }
@@ -36,7 +37,7 @@
             color: var(--accent-cyan);
             font-weight: bold;
             font-size: 0.9rem;
-            border: 1px solid #30363d;
+            border: 1px solid var(--accent-cyan); /* Başlık çerçevesi de mavi oldu */
             border-radius: 20px;
         }
 
