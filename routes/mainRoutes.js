@@ -1,64 +1,70 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db'); // Veritabanı bağlantısı
+const db = require('../config/db');
 
 // --- CONTROLLER IMPORTLARI ---
 const personelController = require('../controllers/personelController');
 const lojistikController = require('../controllers/lojistikController');
 const depoController = require('../controllers/depoController');
 const trendController = require('../controllers/trendController');
-const iadeController = require('../controllers/iadeController'); // İade (Güncel)
+const iadeController = require('../controllers/iadeController');
 const sunucuController = require('../controllers/sunucuController');
 const maliyetController = require('../controllers/maliyetController');
 const simulasyonController = require('../controllers/simulasyonController');
-const parametreController = require('../controllers/parametreController'); // [YENİ] Parametre
+const parametreController = require('../controllers/parametreController');
 
-// --- 1. ANA SAYFA (Dashboard Render) ---
-// Not: mainController oluşturmadığımız için eski çalışan yapıyı koruyoruz.
+// --- 1. GİRİŞ SAYFASI (ANA ROTA) ---
+// Siteye (localhost:3000) girince Login ekranı açılır
 router.get('/', (req, res) => {
-    // Personel listesini çekerek dashboard'u render ediyoruz
+    res.render('login'); 
+});
+
+// --- 2. DASHBOARD (PANEL) ---
+// Login başarılı olunca buraya yönlendirilir
+router.get('/panel', (req, res) => {
+    // Personel listesini çekerek dashboard'u render ediyoruz (Eski yapı korundu)
     const sql = `SELECT id, ad_soyad, rol, saatlik_ucret FROM personel`;
     db.query(sql, (err, personel_results) => {
         if (err) {
-            console.error(err);
+            console.error("Dashboard veri hatası:", err);
+            // Hata olsa bile sayfayı aç, boş liste gönder
             return res.render('dashboard', { personel_data: [], title: 'Hata' }); 
         }
         res.render('dashboard', { personel_data: personel_results, title: 'Genel Bakış' });
     });
 });
 
-// --- 2. API ROTALARI (Hesaplama Modülleri) ---
+// --- 3. API ROTALARI (HESAPLAMA MODÜLLERİ) ---
 
-// 1. Personel Simülasyonu
+// Fulfillment / Personel Stratejisi
 router.post('/api/personel', personelController.hesapla);
 
-// 2. Lojistik Simülasyonu
+// Lojistik Simülasyonu
 router.post('/api/lojistik', lojistikController.hesapla);
 
-// 3. Depo ROI Simülasyonu
+// Depo ROI Simülasyonu
 router.post('/api/depo', depoController.hesapla);
 
-// 4. Trend Analizi
-router.post('/api/depo-trend', trendController.hesapla); // "hesapla" fonksiyonu eski dosyanda mevcut
+// Trend Analizi (12 Aylık)
+router.post('/api/depo-trend', trendController.hesapla);
 
-// 5. İade Politikası Analizi (Bugün Güncelledik)
+// İade Politikası Analizi
 router.post('/api/iade', iadeController.hesapla);
 
-// 6. Sunucu Yük Testi
+// Sunucu Yük Testi
 router.post('/api/sunucu', sunucuController.hesapla);
 
-// 7. Maliyet Tasarrufu
+// Maliyet Tasarrufu
 router.post('/api/maliyet', maliyetController.hesapla);
 
 
-// --- 3. SİMÜLASYON ROTALARI (Canlı Operasyon) ---
+// --- 4. SİMÜLASYON ROTALARI (CANLI OPERASYON) ---
 router.post('/api/simulasyon/olustur', simulasyonController.siparisOlustur);
 router.post('/api/simulasyon/guncelle', simulasyonController.durumGuncelle);
 router.get('/api/simulasyon/liste', simulasyonController.sonSiparisleriGetir);
 
 
-// --- 4. PARAMETRE YÖNETİMİ (YENİ EKLENEN KISIM) ---
-// Ayarlar modalından gelen istekleri karşılar
+// --- 5. PARAMETRE YÖNETİMİ (AYARLAR) ---
 router.post('/api/parametre-guncelle', parametreController.guncelle);
 router.get('/api/parametre-getir', parametreController.getir);
 
