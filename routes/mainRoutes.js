@@ -1,19 +1,22 @@
 const express = require('express');
-const router = express.Router(); 
-const db = require('../config/db'); 
+const router = express.Router();
+const db = require('../config/db'); // Veritabanı bağlantısı
 
 // --- CONTROLLER IMPORTLARI ---
 const personelController = require('../controllers/personelController');
 const lojistikController = require('../controllers/lojistikController');
 const depoController = require('../controllers/depoController');
 const trendController = require('../controllers/trendController');
-const iadeController = require('../controllers/iadeController');
+const iadeController = require('../controllers/iadeController'); // İade (Güncel)
 const sunucuController = require('../controllers/sunucuController');
 const maliyetController = require('../controllers/maliyetController');
+const simulasyonController = require('../controllers/simulasyonController');
+const parametreController = require('../controllers/parametreController'); // [YENİ] Parametre
 
-// --- 1. ANA SAYFA (View Render) ---
+// --- 1. ANA SAYFA (Dashboard Render) ---
+// Not: mainController oluşturmadığımız için eski çalışan yapıyı koruyoruz.
 router.get('/', (req, res) => {
-    // Ana sayfa için temel personel listesini çekiyoruz (View Model)
+    // Personel listesini çekerek dashboard'u render ediyoruz
     const sql = `SELECT id, ad_soyad, rol, saatlik_ucret FROM personel`;
     db.query(sql, (err, personel_results) => {
         if (err) {
@@ -24,13 +27,10 @@ router.get('/', (req, res) => {
     });
 });
 
-// --- API ROTALARI (Hepsi Controller'a Bağlandı) ---
+// --- 2. API ROTALARI (Hesaplama Modülleri) ---
 
-// 1. Personel Simülasyonu (İşgücü Bütçeleme)
+// 1. Personel Simülasyonu
 router.post('/api/personel', personelController.hesapla);
-
-// [YENİ] Parametre Güncelleme (Maaş/Mesai Ayarları)
-router.post('/api/parametre-guncelle', personelController.parametreGuncelle);
 
 // 2. Lojistik Simülasyonu
 router.post('/api/lojistik', lojistikController.hesapla);
@@ -38,33 +38,28 @@ router.post('/api/lojistik', lojistikController.hesapla);
 // 3. Depo ROI Simülasyonu
 router.post('/api/depo', depoController.hesapla);
 
-// 4. Trend Analizi (Gelecek Tahmini)
-router.post('/api/depo-trend', trendController.hesapla);
+// 4. Trend Analizi
+router.post('/api/depo-trend', trendController.hesapla); // "hesapla" fonksiyonu eski dosyanda mevcut
 
-// 5. İade Politikası Analizi
+// 5. İade Politikası Analizi (Bugün Güncelledik)
 router.post('/api/iade', iadeController.hesapla);
 
-// 6. Sunucu Yük Testi (IT Altyapı)
+// 6. Sunucu Yük Testi
 router.post('/api/sunucu', sunucuController.hesapla);
 
-// 7. Sarf Malzeme (Maliyet) Tasarrufu
+// 7. Maliyet Tasarrufu
 router.post('/api/maliyet', maliyetController.hesapla);
 
-// ... (Üstteki diğer importlar ve rotalar aynen kalsın) ...
 
-// SİMÜLASYON CONTROLLER İMPORTU
-const simulasyonController = require('../controllers/simulasyonController');
-
-// --- SİMÜLASYON API ROTALARI ---
-// 1. Yeni sipariş yarat
+// --- 3. SİMÜLASYON ROTALARI (Canlı Operasyon) ---
 router.post('/api/simulasyon/olustur', simulasyonController.siparisOlustur);
-
-// 2. Sipariş durumu güncelle
 router.post('/api/simulasyon/guncelle', simulasyonController.durumGuncelle);
-
-// 3. Sipariş listesini çek
 router.get('/api/simulasyon/liste', simulasyonController.sonSiparisleriGetir);
 
-module.exports = router;
+
+// --- 4. PARAMETRE YÖNETİMİ (YENİ EKLENEN KISIM) ---
+// Ayarlar modalından gelen istekleri karşılar
+router.post('/api/parametre-guncelle', parametreController.guncelle);
+router.get('/api/parametre-getir', parametreController.getir);
 
 module.exports = router;
