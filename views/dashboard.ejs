@@ -9,21 +9,50 @@
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <style>
         :root { --bg-dark: #0d1117; --bg-card: #161b22; --text-main: #c9d1d9; --text-header: #f0f6fc; --accent-cyan: #2f81f7; --border-color: #30363d; }
-        body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .navbar-custom { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 0.8rem 2rem; }
-        .navbar-brand { font-weight: 700; color: var(--text-header) !important; font-size: 1.3rem; }
-        .main-content { padding: 30px; max-width: 1600px; margin: 0 auto; }
-        .card-figma { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; height: 100%; display: flex; flex-direction: column; box-shadow: 0 4px 20px rgba(0,0,0,0.2); transition: transform 0.2s; }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 0.9rem; }
+        
+        /* NAVBAR (İncelik korundu) */
+        .navbar-custom { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 0.5rem 1.5rem; }
+        .navbar-brand { font-weight: 700; color: var(--text-header) !important; font-size: 1.2rem; }
+        
+        .main-content { padding: 20px; max-width: 100%; margin: 0 auto; }
+        
+        /* Kart Tasarımı */
+        .card-figma { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; height: 100%; display: flex; flex-direction: column; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .card-figma:hover { border-color: #58a6ff; }
-        .strategy-zone { border: 2px dashed rgba(47, 129, 247, 0.5); border-radius: 16px; padding: 20px; background-color: rgba(47, 129, 247, 0.15); margin-bottom: 30px; position: relative; }
-        .strategy-title { position: absolute; top: -14px; left: 30px; background-color: var(--bg-dark); padding: 0 10px; color: var(--accent-cyan); font-weight: bold; font-size: 0.9rem; border: 1px solid var(--accent-cyan); border-radius: 20px; }
-        h5 { color: var(--text-header); font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; display: flex; align-items: center; gap: 10px; }
+        
+        /* Strateji Alanı (ESKİ FERAH TASARIM GERİ GELDİ) */
+        .strategy-zone {
+            border: 2px dashed rgba(47, 129, 247, 0.5); 
+            border-radius: 16px;
+            padding: 20px;
+            background-color: rgba(47, 129, 247, 0.15); 
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .strategy-title {
+            position: absolute;
+            top: -14px;
+            left: 30px;
+            background-color: var(--bg-dark);
+            padding: 0 10px;
+            color: var(--accent-cyan);
+            font-weight: bold;
+            font-size: 0.9rem;
+            border: 1px solid var(--accent-cyan);
+            border-radius: 20px;
+        }
+
+        h5 { color: var(--text-header); font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
         .desc { font-size: 0.85rem; color: #8b949e; margin-bottom: 15px; }
         .btn-figma { background-color: var(--accent-cyan); color: #fff; border: none; font-weight: 600; padding: 8px; width: 100%; border-radius: 6px; margin-top: 10px; transition: background 0.2s; font-size: 0.9rem; }
         .btn-figma:hover { background-color: #1f6feb; }
         .row-tight { --bs-gutter-x: 1.5rem; --bs-gutter-y: 1.5rem; }
         .result-box { font-size: 0.85rem; margin-top: 10px; padding: 10px; border-radius: 6px; display: none; font-weight: 500; line-height: 1.4; }
         .form-label-custom { font-size: 0.85rem; color: #8b949e; margin-bottom: 4px; display: block; }
+        
+        /* Sağ taraf alt alta sıkıştırma için class */
+        .compact-col { display: flex; flex-direction: column; gap: 20px; }
     </style>
 </head>
 <body>
@@ -31,9 +60,8 @@
     <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="#"><i class="fa-solid fa-chess-queen me-2"></i>Sentinel DSS <span class="badge bg-primary fs-6 ms-2">STRATEGY</span></a>
-            <div class="text-end d-none d-md-block">
-                <div class="text-white small">Karar Destek Modu</div>
-                <div style="font-size: 0.8rem; color: #2ea043;"><i class="fa-solid fa-chart-line me-1"></i>Taktiksel Analiz</div>
+            <div class="text-end d-flex gap-3 align-items-center">
+                <div style="font-size: 0.8rem; color: #2ea043;" class="fw-bold"><i class="fa-solid fa-signal me-1"></i>Sistem Aktif</div>
             </div>
         </div>
     </nav>
@@ -43,6 +71,7 @@
         <div class="strategy-zone">
             <div class="strategy-title"><i class="fa-solid fa-rocket me-2"></i>BÜYÜME VE KAPASİTE PLANLAMA</div>
             <div class="row row-tight">
+                
                 <div class="col-lg-6"> 
                     <div class="card-figma">
                         <h5><span class="badge bg-primary me-2">ADIM 1</span> Trend Analizi (Gelecek 6 Ay)</h5>
@@ -71,7 +100,7 @@
                                         <i class="fa-solid fa-gear"></i>
                                     </button>
                                 </div>
-                                <p class="desc">Yeni eleman mı, fazla mesai mi?</p>
+                                <p class="desc">Büyüme hedefine göre: Yeni eleman mı, fazla mesai mi?</p>
                                 <div class="d-flex align-items-center gap-3">
                                     <div class="flex-grow-1">
                                         <label class="form-label-custom">Büyüme Beklentisi (%)</label>
@@ -86,7 +115,7 @@
                         <div class="col-12" style="height: 50%;">
                             <div class="card-figma">
                                 <h5><span class="badge bg-warning text-dark me-2">ADIM 3</span> IT Altyapı Yatırımı</h5>
-                                <p class="desc">Cloud geçişi gerekli mi?</p>
+                                <p class="desc">Büyüme hedefine göre: Cloud geçişi gerekli mi?</p>
                                 <div class="d-flex align-items-center gap-3">
                                     <div style="width: 80px;"><div id="sunucu-chart"></div></div>
                                     <div class="flex-grow-1">
@@ -103,12 +132,13 @@
             </div>
         </div>
 
-        <div class="row row-tight">
-            <div class="col-lg-3">
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
                 <div class="card-figma">
                     <h5><i class="fa-solid fa-warehouse text-success"></i> Depo Yatırım ROI</h5>
                     <p class="desc">Yatırımın geri dönüş süresi.</p>
-                    <div id="roi-chart" class="mb-2"></div>
+                    <div id="roi-chart" class="mb-2" style="min-height: 200px;"></div>
                     <div class="mt-auto">
                         <div class="mb-2">
                             <label class="form-label small text-light fw-bold mb-1">Planlanan Yatırım (TL)</label>
@@ -117,7 +147,6 @@
                         <div class="mb-3">
                             <label class="form-label small text-light fw-bold mb-1">Hedef Kapasite Artışı (Adet/Gün)</label>
                             <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="ekKapasite" value="50">
-                            <div class="form-text text-secondary" style="font-size: 0.7rem;"><i class="fa-solid fa-circle-info me-1"></i>Günlük ek üretim.</div>
                         </div>
                         <button class="btn btn-figma w-100" onclick="runDepoSim()">Analiz Et</button>
                         <div id="depo-result" class="result-box bg-dark border border-secondary text-white"></div>
@@ -125,70 +154,74 @@
                 </div>
             </div>
 
-            <div class="col-lg-3">
+            <div class="col-lg-4">
                 <div class="card-figma">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
+                    <div class="d-flex justify-content-between align-items-start">
                         <h5><i class="fa-solid fa-rotate-left text-danger"></i> İade Politikası</h5>
-                        <button class="btn btn-sm btn-outline-secondary text-secondary border-0" data-bs-toggle="modal" data-bs-target="#parametreModal" title="İade Maliyetini Düzenle">
-                            <i class="fa-solid fa-gear"></i>
-                        </button>
+                        <button class="btn btn-sm btn-link text-secondary p-0" data-bs-toggle="modal" data-bs-target="#parametreModal"><i class="fa-solid fa-gear"></i></button>
                     </div>
                     <p class="desc">Ücretli iadenin kâra etkisi.</p>
                     
-                    <div id="iade-chart" class="mb-2"></div>
+                    <div id="iade-chart" class="mb-2" style="min-height: 200px;"></div>
                     
                     <div class="mt-auto">
-                        <div class="alert alert-dark border-secondary p-2 mb-3 small text-secondary">
-                            <i class="fa-solid fa-truck-ramp-box me-1"></i> Operasyonel Maliyet Veritabanından Çekiliyor.
+                        <div class="d-flex align-items-center text-secondary small mb-3">
+                            <i class="fa-solid fa-database me-2 text-info"></i> Operasyonel maliyet veritabanından alınır.
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-2">
                             <label class="form-label small text-light fw-bold mb-1">Müşteri İade Ücreti (TL)</label>
-                            <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="musteriUcreti" value="0">
-                            <div class="form-text text-secondary" style="font-size: 0.65rem;">Müşteriden kesilecek tutar. (0 = Ücretsiz)</div>
+                            <div class="input-group">
+                                <input type="number" class="form-control bg-dark text-white border-secondary" id="musteriUcreti" value="0">
+                                <button class="btn btn-figma" onclick="runIadeSim()" style="margin-top:0; width: auto;">Simüle Et</button>
+                            </div>
+                            <div class="form-text text-secondary" style="font-size: 0.7rem;">Müşteriden kesilecek tutar.</div>
                         </div>
-
-                        <button class="btn btn-figma w-100" onclick="runIadeSim()">Simüle Et</button>
                         <div id="iade-result" class="result-box bg-dark border border-secondary text-white"></div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-3">
-                <div class="card-figma">
-                    <h5><i class="fa-solid fa-piggy-bank text-success"></i> Maliyet Analizi</h5>
-                    <p class="desc">Küçük tasarrufların etkisi.</p>
-                    <div class="d-flex align-items-center justify-content-between py-3">
-                        <h2 class="text-success mb-0" id="kazancDisplay">0 ₺</h2>
-                        <i class="fa-solid fa-coins fa-2x text-success opacity-25"></i>
+            <div class="col-lg-4">
+                <div class="compact-col h-100">
+                    
+                    <div class="card-figma flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5><i class="fa-solid fa-piggy-bank text-success"></i> Maliyet Analizi</h5>
+                            <h3 class="text-success mb-0" id="kazancDisplay">0 ₺</h3>
+                        </div>
+                        <p class="desc">Küçük tasarrufların etkisi.</p>
+                        <div class="mt-auto">
+                            <label class="form-label-custom">Birim İndirim (TL)</label>
+                            <div class="d-flex gap-2">
+                                <input type="number" class="form-control form-control-sm" id="tasarrufBirim" value="0.50" step="0.10">
+                                <button class="btn btn-figma w-auto m-0" onclick="runMaliyetSim()">Hesapla</button>
+                            </div>
+                            <div id="maliyet-result" class="result-box bg-dark border border-secondary text-white"></div>
+                        </div>
                     </div>
-                    <div class="mt-auto">
-                        <label class="form-label-custom">Birim İndirim (TL)</label>
-                        <input type="number" class="form-control form-control-sm" id="tasarrufBirim" value="0.50" step="0.10">
-                        <button class="btn btn-figma" onclick="runMaliyetSim()">Hesapla</button>
-                        <div id="maliyet-result" class="result-box bg-dark border border-secondary text-white"></div>
+
+                    <div class="card-figma flex-grow-1">
+                        <h5><i class="fa-solid fa-truck-fast text-warning"></i> Lojistik & Churn</h5>
+                        <div class="d-flex gap-3 align-items-center h-100">
+                            <div style="width: 45%;">
+                                <div id="lojistik-chart"></div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <label class="form-label-custom">Hedef Hız: <strong id="hizLabel" class="text-warning">3 Gün</strong></label>
+                                <input type="range" class="form-range" id="hedefKargoHizi" min="1" max="5" value="3" oninput="document.getElementById('hizLabel').innerText = this.value + ' Gün'">
+                                <button class="btn btn-figma mt-2" onclick="runLojistikSim()">Analiz</button>
+                                <div id="lojistik-result" class="result-box bg-dark border border-secondary text-white"></div>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
 
-            <div class="col-lg-3">
-                <div class="card-figma">
-                    <h5><i class="fa-solid fa-truck-fast text-warning"></i> Lojistik & Churn</h5>
-                    <p class="desc">Hız vs Müşteri Kaybı.</p>
-                    <div id="lojistik-chart" class="mb-3"></div>
-                    <div class="mt-auto">
-                        <label class="form-label-custom">Hedef Hız: <strong id="hizLabel" class="text-warning">3 Gün</strong></label>
-                        <input type="range" class="form-range" id="hedefKargoHizi" min="1" max="5" value="3" oninput="document.getElementById('hizLabel').innerText = this.value + ' Gün'">
-                        <button class="btn btn-figma" onclick="runLojistikSim()">Analiz Et</button>
-                        <div id="lojistik-result" class="result-box bg-dark border border-secondary text-white"></div>
-                    </div>
-                </div>
-            </div>
-        </div> 
-
-        <div class="row mt-4">
+        </div> <div class="row mt-4">
             <div class="col-12">
-                <div class="card-figma border-warning border-opacity-25" style="background: rgba(255, 193, 7, 0.05);">
+                <div class="card-figma border-warning border-opacity-25" style="background: rgba(255, 193, 7, 0.05); min-height: auto;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="text-warning mb-0"><i class="fa-solid fa-gamepad me-2"></i>Canlı Operasyon Simülatörü</h5>
                         <button class="btn btn-warning btn-sm text-dark fw-bold" onclick="yeniSiparisYarat()">
@@ -198,14 +231,7 @@
                     <div class="table-responsive">
                         <table class="table table-dark table-hover table-sm small align-middle mb-0" style="background: transparent;">
                             <thead>
-                                <tr class="text-secondary">
-                                    <th>ID</th>
-                                    <th>Müşteri</th>
-                                    <th>Saat</th>
-                                    <th>Tutar</th>
-                                    <th>Durum</th>
-                                    <th class="text-end">Aksiyon</th>
-                                </tr>
+                                <tr class="text-secondary"><th>ID</th><th>Müşteri</th><th>Saat</th><th>Tutar</th><th>Durum</th><th class="text-end">Aksiyon</th></tr>
                             </thead>
                             <tbody id="siparisListesiBody"></tbody>
                         </table>
@@ -214,68 +240,30 @@
             </div>
         </div>
 
-        <footer class="mt-5 text-center text-muted small">
-            <p>&copy; 2025 Sentinel DSS v2.0 • Taktiksel Yönetim Sürümü</p>
+        <footer class="mt-4 text-center text-muted small">
+            <p>&copy; 2025 Sentinel DSS v2.2 • Taktiksel Yönetim Sürümü</p>
         </footer>
     </div>
 
-    <div class="modal fade" id="parametreModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="parametreModal" tabindex="-1">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark border border-secondary text-white shadow-lg">
           <div class="modal-header border-secondary">
             <h5 class="modal-title text-info"><i class="fa-solid fa-sliders me-2"></i>Sistem Parametreleri</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
           <div class="modal-body">
-            <div class="alert alert-secondary d-flex align-items-center p-2 small mb-3">
-                <i class="fa-solid fa-circle-info me-2"></i>
-                <div>Bu ayarlar veritabanına kaydedilir ve tüm hesaplamaları anında etkiler.</div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-light fw-bold">1 Personel Aylık Maliyeti (TL)</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fa-solid fa-user-tag"></i></span>
-                    <input type="number" class="form-control bg-dark text-white border-secondary" id="inputPersonelMaliyeti">
-                </div>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-light fw-bold">Sipariş Başına Mesai Maliyeti (TL)</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fa-solid fa-clock"></i></span>
-                    <input type="number" class="form-control bg-dark text-white border-secondary" id="inputMesaiUcreti">
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <label class="form-label text-light fw-bold">İade Operasyon Maliyeti (TL)</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fa-solid fa-box-open"></i></span>
-                    <input type="number" class="form-control bg-dark text-white border-secondary" id="inputIadeKargoMaliyeti">
-                </div>
-                <div class="form-text text-muted small">Kargo firmasına ödenen ve paketleme maliyeti toplamı.</div>
-            </div>
-
-            <div class="mb-2">
-                <label class="form-label text-light fw-bold">Mevcut IT Altyapı Paketi</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-secondary border-secondary text-white"><i class="fa-solid fa-server"></i></span>
-                    <select class="form-select bg-dark text-white border-secondary" id="inputSunucuKapasitesi">
-                        <option value="2000">1. Başlangıç Paketi (Max 2.000)</option>
-                        <option value="5000">2. Standart Paket (Max 5.000)</option>
-                        <option value="15000">3. Pro Paket (Max 15.000)</option>
-                        <option value="50000">4. Enterprise Cluster (Max 50.000+)</option>
-                    </select>
-                </div>
+            <div class="mb-3"><label class="form-label text-light fw-bold">1 Personel Maliyeti</label><input type="number" class="form-control bg-dark text-white border-secondary" id="inputPersonelMaliyeti"></div>
+            <div class="mb-3"><label class="form-label text-light fw-bold">Mesai Ücreti</label><input type="number" class="form-control bg-dark text-white border-secondary" id="inputMesaiUcreti"></div>
+            <div class="mb-3"><label class="form-label text-light fw-bold">İade Kargo Maliyeti</label><input type="number" class="form-control bg-dark text-white border-secondary" id="inputIadeKargoMaliyeti"></div>
+            <div class="mb-3"><label class="form-label text-light fw-bold">Sunucu Paketi</label>
+                <select class="form-select bg-dark text-white border-secondary" id="inputSunucuKapasitesi">
+                    <option value="2000">Başlangıç</option><option value="5000">Standart</option><option value="15000">Pro</option><option value="50000">Enterprise</option>
+                </select>
             </div>
           </div>
-          
           <div class="modal-footer border-secondary">
-            <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">İptal</button>
-            <button type="button" class="btn btn-info btn-sm fw-bold" onclick="parametreleriKaydet()">
-                <i class="fa-solid fa-floppy-disk me-1"></i> Değişiklikleri Kaydet
-            </button>
+            <button type="button" class="btn btn-info fw-bold w-100" onclick="parametreleriKaydet()">Değişiklikleri Kaydet</button>
           </div>
         </div>
       </div>

@@ -4,8 +4,10 @@ const db = require('../config/db');
 exports.hesapla = (req, res) => {
     const buyumeOrani = parseFloat(req.body.buyumeOrani); 
 
-    // 1. Önce Parametreleri Çek (Canlı Veri)
-    const sqlParametre = `SELECT parametre_adi, deger FROM sistem_parametreleri`;
+    // 1. Önce Parametreleri Çek (YENİ SÜTUN YAPISINA GÖRE)
+    // Eski kod: SELECT parametre_adi, deger...
+    // Yeni kod: Direkt sütun isimlerini istiyoruz
+    const sqlParametre = `SELECT personel_maliyeti, mesai_ucreti FROM sistem_parametreleri ORDER BY id DESC LIMIT 1`;
 
     db.query(sqlParametre, (err, paramResults) => {
         if (err) {
@@ -13,13 +15,14 @@ exports.hesapla = (req, res) => {
             return res.status(500).json({ error: 'Parametre okuma hatası' });
         }
 
-        // Gelen veriyi { anahtar: deger } formatına çevir
-        const parametreler = {};
-        paramResults.forEach(row => {
-            parametreler[row.parametre_adi] = parseFloat(row.deger);
-        });
+        // Eğer veritabanı boşsa varsayılan değerleri kullan
+        const paramRow = paramResults[0] || { personel_maliyeti: 30000, mesai_ucreti: 50 };
+        
+        // Veritabanından gelen değerleri alıyoruz
+        const personelMaliyeti = parseFloat(paramRow.personel_maliyeti);
+        const mesaiBirimMaliyet = parseFloat(paramRow.mesai_ucreti);
 
-        // 2. Sipariş Verilerini Çek
+        // 2. Sipariş Verilerini Çek (BU KISIM SENİN KODUNLA AYNI)
         const sqlSiparis = `
             SELECT AVG(aylik_toplam) as ortalama_siparis FROM (
                 SELECT DATE_FORMAT(siparis_tarihi, '%Y-%m') as ay, COUNT(*) as aylik_toplam 
@@ -30,15 +33,14 @@ exports.hesapla = (req, res) => {
         db.query(sqlSiparis, (err, siparisResults) => {
             if (err) return res.status(500).json({ error: 'Veritabanı hatası' });
             
-            const mevcutAylikSiparis = Math.floor(siparisResults[0].ortalama_siparis);
+            // Eğer sipariş geçmişi yoksa 1000 varsayalım (Hata vermesin)
+            const mevcutAylikSiparis = siparisResults.length > 0 && siparisResults[0].ortalama_siparis 
+                ? Math.floor(siparisResults[0].ortalama_siparis) 
+                : 1000;
             
             // Gelecek Senaryosu
             const gelecekAylikSiparis = Math.floor(mevcutAylikSiparis * (1 + (buyumeOrani / 100)));
             const siparisFarki = gelecekAylikSiparis - mevcutAylikSiparis;
-
-            // --- DİNAMİK DEĞERLER KULLANILIYOR ---
-            const personelMaliyeti = parametreler['personel_maaliyet_aylik']; 
-            const mesaiBirimMaliyet = parametreler['mesai_birim_ucret'];   
 
             // Karar Analizi
             const maliyetMesai = siparisFarki * mesaiBirimMaliyet;
@@ -46,22 +48,22 @@ exports.hesapla = (req, res) => {
             const maliyetYeniPersonel = gerekenYeniPersonel * personelMaliyeti;
 
             let mesaj;
-            let durum;
+            let durum; // Renk kodu için (success, warning vs.)
 
             if (siparisFarki <= 0) {
-                mesaj = `🔵 STABİL: Büyüme beklenmediği için mevcut kadro yeterli.`;
+                mesaj = `🔵 <b>STABİL DURUM.</b><br>Büyüme beklenmediği için mevcut kadro yeterli.`;
                 durum = 'primary';
             } else if (maliyetYeniPersonel < maliyetMesai) {
                 // Yeni personel daha ucuzsa
                 const fark = maliyetMesai - maliyetYeniPersonel;
-                mesaj = `🟢 ÖNERİ: <b>YENİ PERSONEL ALIN.</b><br>
+                mesaj = `🟢 <b>ÖNERİ: YENİ PERSONEL ALIN.</b><br>
                          %${buyumeOrani} büyüme için ${gerekenYeniPersonel} kişi almak, mesai ödemekten <b>${fark.toLocaleString()} TL</b> daha kârlı.<br>
                          <small class="text-white-50">(Parametreler: Maaş ${personelMaliyeti.toLocaleString()} TL, Mesai ${mesaiBirimMaliyet} TL)</small>`;
                 durum = 'success';
             } else {
                 // Mesai daha ucuzsa
                 const fark = maliyetYeniPersonel - maliyetMesai;
-                mesaj = `🟡 ÖNERİ: <b>FAZLA MESAİ / OUTSOURCE.</b><br>
+                mesaj = `🟡 <b>ÖNERİ: FAZLA MESAİ / OUTSOURCE.</b><br>
                          Yeni personel almak yerine mesai yaptırmak <b>${fark.toLocaleString()} TL</b> tasarruf sağlar.<br>
                          <small class="text-white-50">(Parametreler: Maaş ${personelMaliyeti.toLocaleString()} TL, Mesai ${mesaiBirimMaliyet} TL)</small>`;
                 durum = 'warning';
@@ -71,32 +73,8 @@ exports.hesapla = (req, res) => {
                 mevcut: mevcutAylikSiparis,
                 gelecek: gelecekAylikSiparis,
                 mesaj: mesaj,
-                durum: durum
+                durum: durum // Frontend bunu kullanabilir veya result-box class'ını ayarlayabilirsin
             });
         });
-    });
-};
-
-// --- GÜNCELLEME FONKSİYONU (YENİ HALİ - Sunucu Kapasitesi Dahil) ---
-exports.parametreGuncelle = (req, res) => {
-    // Frontend'den gelen 3 değeri alıyoruz
-    const { personelMaliyeti, mesaiUcreti, sunucuKapasitesi } = req.body;
-
-    const sql = `
-        UPDATE sistem_parametreleri 
-        SET deger = CASE 
-            WHEN parametre_adi = 'personel_maaliyet_aylik' THEN ? 
-            WHEN parametre_adi = 'mesai_birim_ucret' THEN ? 
-            WHEN parametre_adi = 'sunucu_anlik_kapasite' THEN ? 
-        END
-        WHERE parametre_adi IN ('personel_maaliyet_aylik', 'mesai_birim_ucret', 'sunucu_anlik_kapasite')
-    `;
-
-    db.query(sql, [personelMaliyeti, mesaiUcreti, sunucuKapasitesi], (err, result) => {
-        if (err) {
-            console.error(err);
-            return res.json({ success: false, message: 'Veritabanı güncelleme hatası' });
-        }
-        res.json({ success: true, message: 'Parametreler başarıyla güncellendi!' });
     });
 };
