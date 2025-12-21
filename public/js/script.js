@@ -21,9 +21,7 @@ const commonOptions = {
 // ==========================================
 
 function initLojistikChart(mevcut, yeni) {
-    // Temizlik
     document.querySelector("#lojistik-chart").innerHTML = "";
-    
     const options = { 
         ...commonOptions, 
         chart: { ...commonOptions.chart, type: 'donut' }, 
@@ -33,27 +31,18 @@ function initLojistikChart(mevcut, yeni) {
         plotOptions: { pie: { donut: { size: '65%' } } }, 
         legend: { position: 'bottom' } 
     };
-    
     chartLojistik = new ApexCharts(document.querySelector("#lojistik-chart"), options); 
     chartLojistik.render();
 }
 
 function initRoiChart(yatirim, ekKar) {
-    // Temizlik
     document.querySelector("#roi-chart").innerHTML = "";
-
-    // Veri ve Etiketleri Hazırla (12 Aylık Projeksiyon)
     const data = [];
     const labels = [];
-    
     for(let i=0; i<=12; i++) {
-        // Borç sıfırın altına düşerse 0 göster
         data.push(Math.max(0, yatirim - (ekKar * i)));
-        
-        // Etiketler: Başlangıç, 1. Ay, 2. Ay...
         labels.push(i === 0 ? 'Başlangıç' : i + '. Ay');
     }
-
     const options = {
         ...commonOptions,
         chart: { ...commonOptions.chart, type: 'area' },
@@ -61,34 +50,21 @@ function initRoiChart(yatirim, ekKar) {
         stroke: { curve: 'smooth', width: 3 },
         colors: ['#00E396'],
         fill: { type: 'gradient', gradient: { opacityFrom: 0.6, opacityTo: 0.1 } },
-        
-        // X Ekseni (Zaman)
         xaxis: {
             categories: labels,
-            labels: {
-                style: { colors: '#8b949e', fontSize: '11px' },
-                rotate: -45
-            }
+            labels: { style: { colors: '#8b949e', fontSize: '11px' }, rotate: -45 }
         },
-        // Y Ekseni (Para)
         yaxis: {
             title: { text: 'Kalan Yatırım Tutarı (TL)', style: { color: '#c9d1d9', fontSize: '12px' } },
-            labels: {
-                formatter: function (val) {
-                    return val.toLocaleString('tr-TR', { maximumFractionDigits: 0 }) + ' ₺';
-                },
-                style: { colors: '#8b949e' }
-            }
+            labels: { formatter: function (val) { return val.toLocaleString('tr-TR', { maximumFractionDigits: 0 }) + ' ₺'; }, style: { colors: '#8b949e' } }
         }
     };
-
     chartRoi = new ApexCharts(document.querySelector("#roi-chart"), options);
     chartRoi.render();
 }
 
 function initTrendChart() {
     document.querySelector("#trend-chart").innerHTML = "";
-
     const options = { 
         ...commonOptions, 
         chart: { ...commonOptions.chart, type: 'line', height: 250 }, 
@@ -97,14 +73,12 @@ function initTrendChart() {
         colors: ['#2f81f7', '#f778ba', '#ff4560'], 
         noData: { text: 'Analiz Bekleniyor...' } 
     };
-    
     chartTrend = new ApexCharts(document.querySelector("#trend-chart"), options); 
     chartTrend.render();
 }
 
 function initIadeChart() {
     document.querySelector("#iade-chart").innerHTML = "";
-
     const options = { 
         ...commonOptions, 
         chart: { ...commonOptions.chart, type: 'bar', height: 200 }, 
@@ -113,14 +87,12 @@ function initIadeChart() {
         colors: ['#00E396', '#FF4560', '#2f81f7'], 
         plotOptions: { bar: { distributed: true, borderRadius: 4 } } 
     };
-    
     chartIade = new ApexCharts(document.querySelector("#iade-chart"), options); 
     chartIade.render();
 }
 
 function initSunucuChart() {
     document.querySelector("#sunucu-chart").innerHTML = "";
-
     const options = {
         series: [0],
         chart: { type: 'radialBar', height: 120, foreColor: '#c9d1d9', sparkline: { enabled: true } }, 
@@ -129,16 +101,12 @@ function initSunucuChart() {
                 startAngle: -90, endAngle: 90,
                 hollow: { size: '60%' },
                 track: { background: '#30363d' },
-                dataLabels: {
-                    value: { fontSize: '14px', color: '#fff', offsetY: -10, formatter: val => val + "%" },
-                    name: { show: false }
-                }
+                dataLabels: { value: { fontSize: '14px', color: '#fff', offsetY: -10, formatter: val => val + "%" }, name: { show: false } }
             }
         },
         fill: { type: 'gradient', gradient: { shade: 'dark', type: 'horizontal', gradientToColors: ['#FF4560'], stops: [0, 100] } },
         stroke: { lineCap: 'round' }, colors: ['#00E396']
     };
-    
     chartSunucu = new ApexCharts(document.querySelector("#sunucu-chart"), options);
     chartSunucu.render();
 }
@@ -147,7 +115,6 @@ function initSunucuChart() {
 // 3. SİMÜLASYON API FONKSİYONLARI
 // ==========================================
 
-// --- Trend Analizi ---
 async function runTrendSim() {
     const trendResultBox = document.getElementById('trend-result');
     trendResultBox.style.display = 'block'; 
@@ -156,13 +123,11 @@ async function runTrendSim() {
 
     try {
         const depoInput = document.getElementById('depoKapasitesi');
-        
         const res = await fetch('/api/depo-trend', { 
             method: 'POST', 
             headers: {'Content-Type':'application/json'}, 
             body: JSON.stringify({ depoKapasitesi: depoInput.value }) 
         });
-
         const data = await res.json();
         
         if (chartTrend) {
@@ -173,10 +138,8 @@ async function runTrendSim() {
                 { name: 'Sınır', data: new Array(data.labels.length).fill(parseInt(data.capacity)) }
             ]);
         }
-        
         showResult('trend-result', data.mesaj);
 
-        // Otomatik Veri Aktarımı
         if (data.buyumeYuzdesi) {
             const inputs = ['buyumeOraniPersonel', 'buyumeOraniSunucu'];
             inputs.forEach(id => {
@@ -188,25 +151,33 @@ async function runTrendSim() {
                 }
             });
         }
+    } catch (err) { console.error("Trend Hatası:", err); }
+}
 
+// --- PERSONEL/FULFILLMENT STRATEJİSİ (GÜNCELLENDİ) ---
+async function runPersonelSim() {
+    const buyumeOrani = document.getElementById('buyumeOraniPersonel').value;
+    const resultBox = document.getElementById('personel-result');
+    
+    // UX: Yükleniyor efekti
+    resultBox.style.display = 'block';
+    resultBox.innerHTML = '<span class="text-secondary"><i class="fa-solid fa-circle-notch fa-spin"></i> Analiz ediliyor...</span>';
+    resultBox.className = 'result-box bg-dark border border-secondary text-white';
+
+    try {
+        const res = await fetch('/api/personel', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ buyumeOrani })
+        });
+        const data = await res.json();
+        showResult('personel-result', data.mesaj);
     } catch (err) {
-        console.error("Trend Hatası:", err);
+        console.error("Personel Hata:", err);
+        resultBox.innerHTML = "Bağlantı hatası.";
     }
 }
 
-// --- Personel ---
-async function runPersonelSim() {
-    const buyumeOrani = document.getElementById('buyumeOraniPersonel').value;
-    const res = await fetch('/api/personel', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ buyumeOrani })
-    });
-    const data = await res.json();
-    showResult('personel-result', data.mesaj);
-}
-
-// --- Sunucu ---
 async function runSunucuSim() {
     const buyumeOrani = document.getElementById('buyumeOraniSunucu').value;
     const res = await fetch('/api/sunucu', {
@@ -219,7 +190,6 @@ async function runSunucuSim() {
     showResult('sunucu-result', data.mesaj);
 }
 
-// --- Depo ROI ---
 async function runDepoSim() {
     const res = await fetch('/api/depo', { 
         method: 'POST', 
@@ -230,49 +200,33 @@ async function runDepoSim() {
         }) 
     });
     const data = await res.json();
-    
     if(chartRoi) {
-        // Grafik verisini güncelle (13 noktalı)
         const newData = Array.from({length:13}, (_, i) => Math.max(0, data.yatirimMaliyeti - (data.ekAylikNetKar * i)));
         chartRoi.updateSeries([{ data: newData }]);
     }
     showResult('depo-result', data.mesaj);
 }
 
-// --- İade Politikası (YENİ MANTIK) ---
 async function runIadeSim() {
-    // Sadece Müşteri Ücretini alıyoruz. Operasyonel Maliyeti veritabanı biliyor.
     const musteriUcreti = document.getElementById('musteriUcreti').value;
-
     try {
         const res = await fetch('/api/iade', { 
             method: 'POST', 
             headers: {'Content-Type':'application/json'}, 
             body: JSON.stringify({ musteriUcreti }) 
         });
-        
         const data = await res.json();
-        
-        if (data.error) {
-            alert(data.error);
-            return;
-        }
-
+        if (data.error) { alert(data.error); return; }
         if(chartIade) {
             chartIade.updateSeries([{ 
                 name: 'Tutar (TL)', 
                 data: [Math.floor(data.tasarruf), Math.floor(data.zarar), Math.floor(data.netEtki)] 
             }]);
         }
-        
         showResult('iade-result', data.mesaj);
-
-    } catch (err) {
-        console.error("İade Simülasyon Hatası:", err);
-    }
+    } catch (err) { console.error("İade Simülasyon Hatası:", err); }
 }
 
-// --- Lojistik ---
 async function runLojistikSim() {
     const res = await fetch('/api/lojistik', { 
         method: 'POST', 
@@ -280,12 +234,10 @@ async function runLojistikSim() {
         body: JSON.stringify({ hedefKargoHizi: document.getElementById('hedefKargoHizi').value }) 
     });
     const data = await res.json();
-    
     if(chartLojistik) chartLojistik.updateSeries([data.temelChurn * 100, data.yeniChurn * 100]);
     showResult('lojistik-result', data.mesaj);
 }
 
-// --- Maliyet ---
 async function runMaliyetSim() {
     const res = await fetch('/api/maliyet', { 
         method: 'POST', 
@@ -298,21 +250,22 @@ async function runMaliyetSim() {
 }
 
 // ==========================================
-// 4. PARAMETRE YÖNETİMİ (AYARLAR MODALI)
+// 4. PARAMETRE YÖNETİMİ (REVİZE EDİLDİ)
 // ==========================================
 
-// Veritabanına Kaydet
 async function parametreleriKaydet() {
     const btn = document.querySelector('#parametreModal .btn-info');
     const originalText = btn.innerHTML;
     
-    // Formdaki 4 veriyi al
-    const personelMaliyeti = document.getElementById('inputPersonelMaliyeti').value;
-    const mesaiUcreti = document.getElementById('inputMesaiUcreti').value;
+    // YENİ INPUT DEĞERLERİNİ AL (Dashboard'daki yeni ID'ler)
+    const depoSabitGider = document.getElementById('inputDepoSabitGider').value;
+    const depoPersonelGideri = document.getElementById('inputDepoPersonelGideri').value;
+    const ucplBirimMaliyet = document.getElementById('inputUcplBirimMaliyet').value;
+    const iadeKargoMaliyeti = document.getElementById('inputIadeKargoMaliyeti').value;
     const sunucuKapasitesi = document.getElementById('inputSunucuKapasitesi').value;
-    const iadeKargoMaliyeti = document.getElementById('inputIadeKargoMaliyeti').value; 
 
-    if (!personelMaliyeti || !mesaiUcreti || !sunucuKapasitesi || !iadeKargoMaliyeti) {
+    // Basit Validasyon
+    if (!depoSabitGider || !depoPersonelGideri || !ucplBirimMaliyet || !iadeKargoMaliyeti) {
         alert("Lütfen tüm alanları doldurunuz!");
         return;
     }
@@ -324,7 +277,13 @@ async function parametreleriKaydet() {
         const res = await fetch('/api/parametre-guncelle', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ personelMaliyeti, mesaiUcreti, sunucuKapasitesi, iadeKargoMaliyeti }) 
+            body: JSON.stringify({ 
+                depoSabitGider, 
+                depoPersonelGideri, 
+                ucplBirimMaliyet, 
+                iadeKargoMaliyeti, 
+                sunucuKapasitesi 
+            }) 
         });
         
         const data = await res.json();
@@ -334,11 +293,12 @@ async function parametreleriKaydet() {
             const modal = bootstrap.Modal.getInstance(modalEl);
             modal.hide();
             
-            alert("✅ Parametreler başarıyla güncellendi!");
+            alert("✅ Ayarlar güncellendi!");
 
-            // Değişiklikleri anında yansıtmak için simülasyonları yeniden çalıştır
+            // Etkilenen simülasyonları anında yenile
             if(document.getElementById('musteriUcreti').value) runIadeSim();
             if(document.getElementById('buyumeOraniPersonel').value) runPersonelSim();
+            if(document.getElementById('buyumeOraniSunucu').value) runSunucuSim();
 
         } else {
             alert("Hata: " + data.message);
@@ -352,34 +312,34 @@ async function parametreleriKaydet() {
     }
 }
 
-// Veritabanından Getir (Load)
 async function loadParameters() {
     try {
         const res = await fetch('/api/parametre-getir');
         const data = await res.json();
         
-        // Inputları doldur
-        document.getElementById('inputPersonelMaliyeti').value = data.personel_maliyeti;
-        document.getElementById('inputMesaiUcreti').value = data.mesai_ucreti;
+        // Yeni inputları veritabanından gelen verilerle doldur
+        // Not: Controller'da "depo_sabit_gider" olarak dönüyoruz
+        document.getElementById('inputDepoSabitGider').value = data.depo_sabit_gider;
+        document.getElementById('inputDepoPersonelGideri').value = data.depo_personel_gideri;
+        document.getElementById('inputUcplBirimMaliyet').value = data.ucpl_birim_maliyet;
+        document.getElementById('inputIadeKargoMaliyeti').value = data.iade_kargo_maliyeti;
         document.getElementById('inputSunucuKapasitesi').value = data.sunucu_kapasitesi;
-        document.getElementById('inputIadeKargoMaliyeti').value = data.iade_kargo_maliyeti || 60; // Varsayılan 60
+        
     } catch (err) {
         console.error("Parametreler çekilemedi:", err);
     }
 }
 
 // ==========================================
-// 5. CANLI OPERASYON SİMÜLATÖRÜ (ALT PANEL)
+// 5. CANLI OPERASYON
 // ==========================================
 
 async function siparisleriGetir() {
     try {
         const res = await fetch('/api/simulasyon/liste');
         const siparisler = await res.json();
-        
         const tbody = document.getElementById('siparisListesiBody');
         if(!tbody) return;
-
         tbody.innerHTML = siparisler.map(s => `
             <tr>
                 <td><span class="text-muted">#${s.id}</span></td>
@@ -387,14 +347,10 @@ async function siparisleriGetir() {
                 <td><small class="text-secondary">${s.saat}</small></td>
                 <td>${s.toplam_tutar} ₺</td>
                 <td><span class="badge ${getDurumRenk(s.durum)}">${s.durum}</span></td>
-                <td class="text-end">
-                    ${getNextActionBtn(s.id, s.durum)}
-                </td>
+                <td class="text-end">${getNextActionBtn(s.id, s.durum)}</td>
             </tr>
         `).join('');
-    } catch (err) {
-        console.error("Liste hatası:", err);
-    }
+    } catch (err) { console.error("Liste hatası:", err); }
 }
 
 function getDurumRenk(durum) {
@@ -407,91 +363,42 @@ function getDurumRenk(durum) {
 }
 
 function getNextActionBtn(id, durum) {
-    let nextDurum = '', btnText = '', btnClass = 'btn-outline-secondary', icon = 'fa-arrow-right';
-
-    if(durum === 'Bekliyor') { 
-        nextDurum = 'Onaylandı'; btnText = 'Onayla'; btnClass='btn-outline-info'; icon='fa-check'; 
-    }
-    else if(durum === 'Onaylandı') { 
-        nextDurum = 'Hazırlanıyor'; btnText = 'Hazırla'; btnClass='btn-outline-warning'; icon='fa-box-open'; 
-    }
-    else if(durum === 'Hazırlanıyor') { 
-        nextDurum = 'Kargoda'; btnText = 'Kargola'; btnClass='btn-outline-primary'; icon='fa-truck'; 
-    }
-    else if(durum === 'Kargoda') { 
-        nextDurum = 'Teslim Edildi'; btnText = 'Teslim Et'; btnClass='btn-outline-success'; icon='fa-handshake'; 
-    }
-    else {
-        return '<span class="text-success small"><i class="fa-solid fa-circle-check"></i> Tamamlandı</span>';
-    }
-
-    return `<button class="btn btn-sm ${btnClass} py-0 px-2" style="font-size: 0.75rem;" onclick="durumDegistir(${id}, '${nextDurum}')">
-                ${btnText} <i class="fa-solid ${icon} ms-1"></i>
-            </button>`;
+    let next='', txt='', cls='btn-outline-secondary', ico='fa-arrow-right';
+    if(durum === 'Bekliyor') { next='Onaylandı'; txt='Onayla'; cls='btn-outline-info'; ico='fa-check'; }
+    else if(durum === 'Onaylandı') { next='Hazırlanıyor'; txt='Hazırla'; cls='btn-outline-warning'; ico='fa-box-open'; }
+    else if(durum === 'Hazırlanıyor') { next='Kargoda'; txt='Kargola'; cls='btn-outline-primary'; ico='fa-truck'; }
+    else if(durum === 'Kargoda') { next='Teslim Edildi'; txt='Teslim Et'; cls='btn-outline-success'; ico='fa-handshake'; }
+    else return '<span class="text-success small"><i class="fa-solid fa-circle-check"></i> Tamamlandı</span>';
+    return `<button class="btn btn-sm ${cls} py-0 px-2" style="font-size: 0.75rem;" onclick="durumDegistir(${id}, '${next}')">${txt} <i class="fa-solid ${ico} ms-1"></i></button>`;
 }
 
 async function yeniSiparisYarat() {
     const btn = document.querySelector('button[onclick="yeniSiparisYarat()"]');
     const originalContent = btn.innerHTML;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-
-    try {
-        await fetch('/api/simulasyon/olustur', { method: 'POST' });
-        await siparisleriGetir(); 
-    } catch (err) {
-        alert("Sipariş oluşturulamadı!");
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalContent;
-    }
+    btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+    try { await fetch('/api/simulasyon/olustur', { method: 'POST' }); await siparisleriGetir(); } catch (err) { alert("Sipariş oluşturulamadı!"); } finally { btn.disabled = false; btn.innerHTML = originalContent; }
 }
 
 async function durumDegistir(id, yeniDurum) {
-    try {
-        await fetch('/api/simulasyon/guncelle', { 
-            method: 'POST', 
-            headers: {'Content-Type':'application/json'}, 
-            body: JSON.stringify({ id, yeniDurum }) 
-        });
-        await siparisleriGetir();
-    } catch (err) {
-        console.error(err);
-    }
+    try { await fetch('/api/simulasyon/guncelle', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ id, yeniDurum }) }); await siparisleriGetir(); } catch (err) { console.error(err); }
 }
 
-// Yardımcı: Mesaj Gösterici
 function showResult(elementId, msg) {
     const el = document.getElementById(elementId);
     if(el) {
         el.style.display = 'block';
         el.innerHTML = msg;
         el.className = 'result-box text-white mt-2 ' + 
-            (msg.includes('🟢') || msg.includes('OPTIMAL') ? 'bg-success bg-opacity-25 border border-success' : 
+            (msg.includes('🟢') || msg.includes('OPTIMAL') || msg.includes('STRATEJİ') ? 'bg-success bg-opacity-25 border border-success' : 
             (msg.includes('🔵') ? 'bg-primary bg-opacity-25 border border-primary' : 
             (msg.includes('🟡') ? 'bg-warning bg-opacity-25 border border-warning' : 
             'bg-danger bg-opacity-25 border border-danger')));
     }
 }
 
-// ==========================================
-// 6. BAŞLATICI (DOCUMENT READY)
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Grafikleri Başlat
-    initTrendChart(); 
-    initLojistikChart(5, 5); 
-    initRoiChart(100000, 44000); 
-    initIadeChart(); 
-    initSunucuChart();
-    
-    // Simülasyon Listesini Çek
+    initTrendChart(); initLojistikChart(5, 5); initRoiChart(100000, 44000); initIadeChart(); initSunucuChart();
     siparisleriGetir();
-    
-    // Modal açıldığında parametreleri veritabanından çek ve doldur
     const modalEl = document.getElementById('parametreModal');
-    if(modalEl) {
-        modalEl.addEventListener('show.bs.modal', loadParameters);
-    }
+    if(modalEl) { modalEl.addEventListener('show.bs.modal', loadParameters); }
 });
