@@ -1,0 +1,7 @@
+# Node.js Bağımlılıkları (Otomatik indirilmesi gereken büyük klasör)
+/node_modules/
+
+
+# Çalışma ve Geçici Dosyalar
+.DS_Store
+*.logdata.csv
