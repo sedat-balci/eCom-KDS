@@ -1,2 +1,2 @@
 # eCom-KDS
-DSS  project for an operation manager of a e commerce company
+DSS  project for operation manager of an e commerce company
